@@ -116,20 +116,12 @@ export default function App() {
         </div>
 
         {/* BUTTON */}
-        <button
-          onClick={recommend}
-          disabled={loading}
-          style={buttonStyle}
-        >
+        <button onClick={recommend} disabled={loading} style={buttonStyle}>
           {loading ? 'Thinking…' : 'Recommend'}
         </button>
 
         {/* ERROR */}
-        {error && (
-          <div style={errorStyle}>
-            {error}
-          </div>
-        )}
+        {error && <div style={errorStyle}>{error}</div>}
 
         {/* RESULTS */}
         <div style={{ marginTop: 16, display: 'grid', gap: 10 }}>
@@ -140,10 +132,7 @@ export default function App() {
           )}
 
           {results.map((res, i) => (
-            <div
-              key={res.model.name}
-              style={resultCardStyle}
-            >
+            <div key={res.model.name} style={resultCardStyle}>
               <div
                 style={{
                   fontSize: 16,
@@ -233,6 +222,7 @@ const inputStyle: CSSProperties = {
   width: '100%',
   fontSize: 14,
   outline: 'none',
+  boxSizing: 'border-box', // prevents overflow out of the card
 } as const
 
 const buttonStyle: CSSProperties = {

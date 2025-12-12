@@ -64,7 +64,7 @@ export default function AIChatPage() {
               fontSize: 13,
             }}
           >
-            For now, use the <b>LLMExplore</b> and <b>Leaderboard</b> tabs to
+            For now, use the <b>LLMExplore</b> and <b>Advisor</b> tabs to
             track research and compare models. AI Chat will plug into those next.
           </div>
         </div>

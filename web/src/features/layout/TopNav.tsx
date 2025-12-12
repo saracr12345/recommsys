@@ -44,6 +44,8 @@ export default function TopNav() {
         top: 0,
         zIndex: 20,
         background: '#ffffff',
+        // thin line across the top nav
+        borderBottom: '1px solid rgba(15,23,42,0.08)',
       }}
     >
       <div
@@ -67,10 +69,11 @@ export default function TopNav() {
           }}
         >
           <TabLink to="/">LLMExplore</TabLink>
-          <TabLink to="/advisor">Leaderboard</TabLink>
+          {/* was "Leaderboard" */}
+          <TabLink to="/advisor">Advisor</TabLink>
           <TabLink to="/aichat">AIChat</TabLink>
         </nav>
-        
+
         <div
           style={{
             flex: 1,

@@ -1,6 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react'
 
-const styles = {
+const styles: Record<string, CSSProperties> = {
   page: {
     fontFamily:
       'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
@@ -17,13 +23,24 @@ const styles = {
     marginBottom: 16,
   },
   grid: { display: 'grid', gridTemplateColumns: '300px 1fr', gap: 16 },
+
+  // sticky + scrollable left column
+  sidebarWrapper: {
+    position: 'sticky',
+    top: 120,
+    maxHeight: 'calc(100vh - 130px)', // room for top text
+    overflowY: 'auto',
+    paddingRight: 4, // avoid scrollbar over content
+  },
+
   sidebar: { display: 'grid', gap: 12, alignContent: 'start' },
+
   card: {
     background: '#ffffff',
     border: '1px solid #e2e8f0',
-    borderRadius: 12,
-    padding: 12,
-    boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+    borderRadius: 14,
+    padding: 14,
+    boxShadow: '0 8px 24px rgba(15,23,42,0.06)',
   },
   cardTitle: {
     margin: 0,
@@ -44,7 +61,8 @@ const styles = {
     border: '1px solid #cbd5e1',
     borderRadius: 8,
     outline: 'none',
-  } as const,
+    boxSizing: 'border-box',
+  },
   button: {
     padding: '8px 12px',
     borderRadius: 8,
@@ -394,7 +412,7 @@ export default function TrackerPage() {
           <button
             onClick={refreshFeeds}
             disabled={loading}
-            style={styles.buttonPrimary as any}
+            style={styles.buttonPrimary}
           >
             {loading ? 'Refreshing…' : 'Refresh'}
           </button>
@@ -408,226 +426,231 @@ export default function TrackerPage() {
         {/* LEFT – filters/keywords/sources */}
         <aside
           style={{
-            ...styles.sidebar,
-            position: 'sticky',
-            top: 120,
-            height: 'fit-content',
+            ...styles.sidebarWrapper,
           }}
         >
-          {/* Filters */}
-          <section style={styles.card as any}>
-            <h3 style={styles.cardTitle as any}>Filters</h3>
-            <div style={{ display: 'grid', gap: 8 }}>
-              <div>
-                <label style={styles.label as any}>Type</label>
-                <select
-                  value={prefs.tab}
-                  onChange={(e) =>
-                    setPrefs((p: any) => ({
-                      ...p,
-                      tab: (e.target as HTMLSelectElement).value,
-                    }))
-                  }
-                  style={styles.input as any}
-                >
-                  <option value="all">All</option>
-                  <option value="paper">Papers</option>
-                  <option value="blog">Blogs</option>
-                </select>
-              </div>
-              <div>
-                <label style={styles.label as any}>Search</label>
-                <input
-                  placeholder="Search titles & summaries…"
-                  value={q}
-                  onChange={(e) =>
-                    setQ((e.target as HTMLInputElement).value)
-                  }
-                  style={styles.input as any}
-                />
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <label
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    fontSize: 14,
-                    color: '#0f172a',
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={!!prefs.onlyKeywordMatches}
+          <div style={styles.sidebar}>
+            {/* Filters */}
+            <section style={styles.card}>
+              <h3 style={styles.cardTitle}>Filters</h3>
+              <div style={{ display: 'grid', gap: 8 }}>
+                <div>
+                  <label style={styles.label}>Type</label>
+                  <select
+                    value={prefs.tab}
                     onChange={(e) =>
                       setPrefs((p: any) => ({
                         ...p,
-                        onlyKeywordMatches: (
-                          e.target as HTMLInputElement
-                        ).checked,
+                        tab: (e.target as HTMLSelectElement).value,
                       }))
                     }
-                  />
-                  <span> Keywords only</span>
-                </label>
-                <label
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    fontSize: 14,
-                    color: '#0f172a',
-                  }}
-                >
+                    style={styles.input}
+                  >
+                    <option value="all">All</option>
+                    <option value="paper">Papers</option>
+                    <option value="blog">Blogs</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={styles.label}>Search</label>
                   <input
-                    type="checkbox"
-                    checked={!!prefs.showSummaries}
+                    placeholder="Search titles & summaries…"
+                    value={q}
                     onChange={(e) =>
-                      setPrefs((p: any) => ({
-                        ...p,
-                        showSummaries: (
-                          e.target as HTMLInputElement
-                        ).checked,
-                      }))
+                      setQ((e.target as HTMLInputElement).value)
                     }
+                    style={styles.input}
                   />
-                  <span> Show summaries</span>
-                </label>
-                <label
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    fontSize: 14,
-                    color: '#0f172a',
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={!!prefs.onlyFavorites}
-                    onChange={(e) =>
-                      setPrefs((p: any) => ({
-                        ...p,
-                        onlyFavorites: (
-                          e.target as HTMLInputElement
-                        ).checked,
-                      }))
-                    }
-                  />
-                  <span> Favorites</span>
-                </label>
-              </div>
-              <div>
-                <label style={styles.label as any}>Sort</label>
-                <select
-                  value={prefs.sort}
-                  onChange={(e) =>
-                    setPrefs((p: any) => ({
-                      ...p,
-                      sort: (e.target as HTMLSelectElement).value,
-                    }))
-                  }
-                  style={styles.input as any}
-                >
-                  <option value="newest">Newest</option>
-                  <option value="oldest">Oldest</option>
-                  <option value="relevance">Relevance</option>
-                </select>
-              </div>
-            </div>
-          </section>
-
-          {/* Tracked keywords */}
-          <section style={styles.card as any}>
-            <h3 style={styles.cardTitle as any}>Tracked keywords</h3>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-              <input
-                placeholder="Add a keyword…"
-                value={newKeyword}
-                onChange={(e) =>
-                  setNewKeyword((e.target as HTMLInputElement).value)
-                }
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') addKeyword(newKeyword)
-                }}
-                style={styles.input as any}
-              />
-              <button
-                onClick={() => addKeyword(newKeyword)}
-                style={styles.button as any}
-              >
-                Add
-              </button>
-              {!!activeKws.length && (
-                <button
-                  onClick={clearActiveKws}
-                  style={styles.button as any}
-                >
-                  Clear selection
-                </button>
-              )}
-            </div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {(keywords as string[]).map((k) => {
-                const selected = activeKws.includes(k)
-                return (
-                  <span
-                    key={k}
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <label
                     style={{
-                      ...(styles.pill as any),
-                      background: selected ? '#e0e7ff' : '#f1f5f9',
-                      borderColor: selected ? '#93c5fd' : '#e2e8f0',
-                      display: 'inline-flex',
+                      display: 'flex',
                       alignItems: 'center',
                       gap: 6,
+                      fontSize: 14,
+                      color: '#0f172a',
                     }}
                   >
-                    <button
-                      onClick={() => toggleActiveKw(k)}
-                      style={{
-                        border: 'none',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                        color: '#0f172a',
-                      }}
-                    >
-                      {k}
-                    </button>
-                    <button
-                      onClick={(ev) => {
-                        ev.stopPropagation()
-                        removeKeyword(k)
-                      }}
-                      title="Remove"
-                      style={{
-                        border: 'none',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                        color: '#64748b',
-                      }}
-                    >
-                      ×
-                    </button>
-                  </span>
-                )
-              })}
-            </div>
-          </section>
+                    <input
+                      type="checkbox"
+                      checked={!!prefs.onlyKeywordMatches}
+                      onChange={(e) =>
+                        setPrefs((p: any) => ({
+                          ...p,
+                          onlyKeywordMatches: (
+                            e.target as HTMLInputElement
+                          ).checked,
+                        }))
+                      }
+                    />
+                    <span> Keywords only</span>
+                  </label>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      fontSize: 14,
+                      color: '#0f172a',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!!prefs.showSummaries}
+                      onChange={(e) =>
+                        setPrefs((p: any) => ({
+                          ...p,
+                          showSummaries: (
+                            e.target as HTMLInputElement
+                          ).checked,
+                        }))
+                      }
+                    />
+                    <span> Show summaries</span>
+                  </label>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      fontSize: 14,
+                      color: '#0f172a',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!!prefs.onlyFavorites}
+                      onChange={(e) =>
+                        setPrefs((p: any) => ({
+                          ...p,
+                          onlyFavorites: (
+                            e.target as HTMLInputElement
+                          ).checked,
+                        }))
+                      }
+                    />
+                    <span> Favorites</span>
+                  </label>
+                </div>
+                <div>
+                  <label style={styles.label}>Sort</label>
+                  <select
+                    value={prefs.sort}
+                    onChange={(e) =>
+                      setPrefs((p: any) => ({
+                        ...p,
+                        sort: (e.target as HTMLSelectElement).value,
+                      }))
+                    }
+                    style={styles.input}
+                  >
+                    <option value="newest">Newest</option>
+                    <option value="oldest">Oldest</option>
+                    <option value="relevance">Relevance</option>
+                  </select>
+                </div>
+              </div>
+            </section>
 
-          {/* Sources */}
-          <section style={styles.card as any}>
-            <h3 style={styles.cardTitle as any}>Sources</h3>
-            <div style={styles.info as any}>
-              Sources are now <b>managed on the server</b>. The list here
-              is informational only. If you want a UI to manage
-              server-side sources later, we can add an admin screen.
-            </div>
-          </section>
+            {/* Tracked keywords */}
+            <section style={styles.card}>
+              <h3 style={styles.cardTitle}>Tracked keywords</h3>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                <input
+                  placeholder="Add a keyword…"
+                  value={newKeyword}
+                  onChange={(e) =>
+                    setNewKeyword((e.target as HTMLInputElement).value)
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') addKeyword(newKeyword)
+                  }}
+                  style={styles.input}
+                />
+                <button
+                  onClick={() => addKeyword(newKeyword)}
+                  style={styles.button}
+                >
+                  Add
+                </button>
+                {!!activeKws.length && (
+                  <button onClick={clearActiveKws} style={styles.button}>
+                    Clear selection
+                  </button>
+                )}
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 6,
+                  flexWrap: 'wrap',
+                  maxHeight: 220,
+                  overflowY: 'auto',
+                  paddingRight: 4,
+                }}
+              >
+                {(keywords as string[]).map((k) => {
+                  const selected = activeKws.includes(k)
+                  return (
+                    <span
+                      key={k}
+                      style={{
+                        ...styles.pill,
+                        background: selected ? '#e0e7ff' : '#f1f5f9',
+                        borderColor: selected ? '#93c5fd' : '#e2e8f0',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                      }}
+                    >
+                      <button
+                        onClick={() => toggleActiveKw(k)}
+                        style={{
+                          border: 'none',
+                          background: 'transparent',
+                          cursor: 'pointer',
+                          color: '#0f172a',
+                        }}
+                      >
+                        {k}
+                      </button>
+                      <button
+                        onClick={(ev) => {
+                          ev.stopPropagation()
+                          removeKeyword(k)
+                        }}
+                        title="Remove"
+                        style={{
+                          border: 'none',
+                          background: 'transparent',
+                          cursor: 'pointer',
+                          color: '#64748b',
+                        }}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )
+                })}
+              </div>
+            </section>
+
+            {/* Sources */}
+            <section style={styles.card}>
+              <h3 style={styles.cardTitle}>Sources</h3>
+              <div style={styles.info}>
+                Sources are now <b>managed on the server</b>. The list here is
+                informational only. If you want a UI to manage server-side
+                sources later, we can add an admin screen.
+              </div>
+            </section>
+          </div>
         </aside>
 
         {/* RIGHT - feed + finance trends */}
         <main>
-          {error && <div style={styles.error as any}>{error}</div>}
+          {error && <div style={styles.error}>{error}</div>}
           {loading ? (
             <div
               style={{
@@ -664,10 +687,10 @@ export default function TrackerPage() {
 
           {!!financeTrends.length && (
             <div style={{ marginTop: 16 }}>
-              <div style={styles.card as any}>
+              <div style={styles.card}>
                 <h3
                   style={{
-                    ...(styles.cardTitle as any),
+                    ...styles.cardTitle,
                     marginBottom: 12,
                   }}
                 >
@@ -815,7 +838,7 @@ function FeedList({
 
   if (!items || !items.length) {
     return (
-      <div style={styles.card as any}>
+      <div style={styles.card}>
         <div style={{ color: '#475569' }}>
           No items yet. Try Refresh.
         </div>
@@ -827,7 +850,7 @@ function FeedList({
     <div
       ref={containerRef}
       style={{
-        ...(styles.feedGrid as any),
+        ...styles.feedGrid,
         gridTemplateColumns: cols === 1 ? '1fr' : '1fr 1fr',
       }}
     >
@@ -863,7 +886,7 @@ function FeedList({
             >
               <button
                 onClick={() => toggleRead(e.id)}
-                style={styles.textButton as any}
+                style={styles.textButton}
               >
                 {readIds[e.id] ? 'Unread' : 'Read'}
               </button>
@@ -871,14 +894,14 @@ function FeedList({
                 href={e.link}
                 target="_blank"
                 rel="noreferrer"
-                style={styles.textButton as any}
+                style={styles.textButton}
               >
                 Open
               </a>
               <button
                 title="Favorite"
                 onClick={() => toggleFav(e.id)}
-                style={styles.textButton as any}
+                style={styles.textButton}
               >
                 {favIds[e.id] ? '★' : '☆'}
               </button>
