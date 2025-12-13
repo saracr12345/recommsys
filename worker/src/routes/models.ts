@@ -5,7 +5,7 @@ import type { LlmModelProfile } from "@recommsys/shared";
 
 const router = Router();
 
-// GET /models – list all models
+// GET /models - list all models
 router.get("/", async (_req, res) => {
   try {
     const models = await getModels();
@@ -16,7 +16,7 @@ router.get("/", async (_req, res) => {
   }
 });
 
-// POST /models – upsert a model
+// POST /models - up set a model
 router.post("/", async (req, res) => {
   try {
     const body = req.body as Partial<LlmModelProfile>;
@@ -47,4 +47,4 @@ router.post("/", async (req, res) => {
   }
 });
 
-export default router;   // 👈 critical
+export default router;   

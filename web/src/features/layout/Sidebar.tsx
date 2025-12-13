@@ -54,7 +54,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       {/* TOP SECTION */}
       <div>
         {collapsed ? (
-          // COLLAPSED: tiny LLM box; hover ⇒ arrow; click ⇒ expand
+          // COLLAPSED: LLM box; hover arrow; click expand
           <button
             type="button"
             onClick={onToggle}

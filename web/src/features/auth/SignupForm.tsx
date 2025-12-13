@@ -1,4 +1,3 @@
-// web/src/features/auth/SignupForm.tsx
 import { useState, type CSSProperties, type FormEvent } from 'react'
 import { pageShell, card, input, primaryButton } from '@/ui/styles'
 

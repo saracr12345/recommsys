@@ -2,6 +2,8 @@ import { useState, type CSSProperties } from 'react'
 import { pageShell, card, input, primaryButton } from '@/ui/styles'
 import { api } from '@/lib/api'
 
+// ---- types that match the backend /recommend response ----
+
 type AdvisorModel = {
   name: string
   provider: string
@@ -11,9 +13,25 @@ type AdvisorModel = {
   tags: string[]
 }
 
+type AdvisorFactors = {
+  privacyMatch: number
+  ctxScore: number
+  latencyScore: number
+  costScore: number
+  domainScore: number
+}
+
 type AdvisorResult = {
   model: AdvisorModel
   score: number
+  confidence?: number
+  factors?: AdvisorFactors
+  why?: string[]
+}
+
+type RecommendResponse = {
+  ok: boolean
+  results: AdvisorResult[]
 }
 
 export default function App() {
@@ -24,7 +42,6 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState<AdvisorResult[]>([])
   const [error, setError] = useState<string>('')
-  
 
   async function recommend() {
     setLoading(true)
@@ -32,7 +49,7 @@ export default function App() {
     setResults([])
 
     try {
-      const data = await api<{ results: AdvisorResult[] }>('/recommend', {
+      const data = await api<RecommendResponse>('/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -43,12 +60,23 @@ export default function App() {
         }),
       })
 
+      if (!data.ok) {
+        throw new Error('Recommendation failed')
+      }
+
       setResults(data.results ?? [])
     } catch (e: any) {
       setError(e.message || 'Error')
     } finally {
       setLoading(false)
     }
+  }
+
+  function confidenceLabel(conf?: number): string {
+    if (conf == null) return ''
+    if (conf >= 0.75) return 'High'
+    if (conf >= 0.5) return 'Medium'
+    return 'Low'
   }
 
   return (
@@ -145,49 +173,109 @@ export default function App() {
             </div>
           )}
 
-          {results.map((res, i) => (
-            <div key={res.model.name} style={resultCardStyle}>
-              <div
-                style={{
-                  fontSize: 16,
-                  fontWeight: 600,
-                  marginBottom: 4,
-                  color: '#0f172a',
-                }}
-              >
-                #{i + 1} — {res.model.name}
-              </div>
+          {results.map((res, i) => {
+            const isTop = i === 0 && res.confidence != null
+            const label = confidenceLabel(res.confidence)
 
-              <div
-                style={{
-                  fontSize: 13,
-                  color: '#1f2937',
-                  lineHeight: 1.5,
-                }}
-              >
-                Provider: {res.model.provider}
-                <br />
-                Context: {res.model.context.toLocaleString()} tokens
-                <br />
-                Latency: {res.model.latencyMs} ms
-                <br />
-                Cost: ${res.model.costPer1kTokens}/1k tokens
-                <br />
-                Tags: {res.model.tags.join(', ')}
-              </div>
+            return (
+              <div key={res.model.name} style={resultCardStyle}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 4,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 600,
+                      color: '#0f172a',
+                    }}
+                  >
+                    #{i + 1} — {res.model.name}
+                  </div>
 
-              <div
-                style={{
-                  marginTop: 6,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: '#1d4ed8',
-                }}
-              >
-                Score: {res.score.toFixed(2)}
+                  {isTop && (
+                    <span
+                      style={{
+                        fontSize: 11,
+                        padding: '2px 8px',
+                        borderRadius: 999,
+                        border: '1px solid #bfdbfe',
+                        background: '#dbeafe',
+                        color: '#1d4ed8',
+                      }}
+                    >
+                      Confidence: {res.confidence!.toFixed(2)} ({label})
+                    </span>
+                  )}
+                </div>
+
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: '#1f2937',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Provider: {res.model.provider}
+                  <br />
+                  Context: {res.model.context.toLocaleString()} tokens
+                  <br />
+                  Latency: {res.model.latencyMs} ms
+                  <br />
+                  Cost: ${res.model.costPer1kTokens}/1k tokens
+                  <br />
+                  Tags: {res.model.tags.join(', ') || '–'}
+                </div>
+
+                {/* Why explanations */}
+                {res.why && res.why.length > 0 && (
+                  <ul
+                    style={{
+                      marginTop: 6,
+                      marginBottom: 0,
+                      paddingLeft: 18,
+                      fontSize: 12,
+                      color: '#4b5563',
+                    }}
+                  >
+                    {res.why.map((w) => (
+                      <li key={w}>{w}</li>
+                    ))}
+                  </ul>
+                )}
+
+                {/* Factor breakdown */}
+                {res.factors && (
+                  <div
+                    style={{
+                      marginTop: 6,
+                      fontSize: 11,
+                      color: '#6b7280',
+                    }}
+                  >
+                    Cost score: {res.factors.costScore.toFixed(2)} ·{' '}
+                    Latency score: {res.factors.latencyScore.toFixed(2)} ·{' '}
+                    Context score: {res.factors.ctxScore.toFixed(2)}
+                  </div>
+                )}
+
+                <div
+                  style={{
+                    marginTop: 6,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: '#1d4ed8',
+                  }}
+                >
+                  Score: {res.score.toFixed(2)}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     </div>
@@ -198,7 +286,7 @@ export default function App() {
 
 const pageStyle: CSSProperties = { ...pageShell }
 const cardStyle: CSSProperties = { ...card, width: 560 }
-const inputStyle: CSSProperties = { ...input } // already has boxSizing
+const inputStyle: CSSProperties = { ...input }
 const buttonStyle: CSSProperties = {
   ...primaryButton,
   marginTop: 8,
@@ -215,7 +303,6 @@ const labelStyle: CSSProperties = {
   fontSize: 13,
   color: '#475569',
 }
-
 
 const errorStyle: CSSProperties = {
   color: '#b91c1c',

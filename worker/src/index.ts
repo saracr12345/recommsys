@@ -4,6 +4,8 @@ import Parser from 'rss-parser'
 import crypto from 'crypto'
 import Redis from 'ioredis'
 import modelsRouter from './routes/models.js'
+import recommendRouter from './routes/recommend.js'
+import recommendationsRouter from './routes/recommendations.js'
 
 // --- APP INIT ---
 const app = express()
@@ -12,6 +14,8 @@ app.use(express.json())
 
 // --- ROUTES ---
 app.use('/models', modelsRouter)
+app.use('/recommend', recommendRouter)
+app.use('/recommendations', recommendationsRouter)
 
 const parser = new Parser()
 
@@ -97,7 +101,7 @@ async function fetchTextWithFallbacks(url: string): Promise<{ mode: 'json' | 'xm
     }
   } catch {}
 
-  // allorigins
+  // all origins
   try {
     const r = await fetchWithTimeout(
       `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
@@ -169,7 +173,7 @@ const FEEDS_TTL_SEC = Number(process.env.FEEDS_TTL_SEC || 120)
 
 app.get('/feeds', async (_req, res) => {
   try {
-    // cache (optional)
+    // cache 
     try {
       const cached = await redis.get('feeds:combined')
       if (cached) return res.json(JSON.parse(cached))

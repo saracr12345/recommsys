@@ -1,4 +1,3 @@
-// web/src/features/auth/LoginForm.tsx
 import { useState, type CSSProperties, type FormEvent } from 'react'
 import { pageShell, card, input, primaryButton } from '@/ui/styles'
 
@@ -10,7 +9,7 @@ export default function LoginForm() {
   function onSubmit(e: FormEvent) {
     e.preventDefault()
     setError('') // hook up real auth later
-    // TODO: call your backend / Firebase etc.
+    // TODO: call backend / Firebase etc.
   }
 
   return (
@@ -117,7 +116,7 @@ const labelStyle: CSSProperties = {
 
 const inputStyle: CSSProperties = {
   ...input,
-  boxSizing: 'border-box', // keep explicit to avoid overflow
+  boxSizing: 'border-box', // avoid overflow
 } as const
 
 const buttonStyle: CSSProperties = {
