@@ -1,178 +1,122 @@
-import express from 'express';
-import cors from 'cors';
-import Parser from 'rss-parser';
-import crypto from 'crypto';
-import Redis from 'ioredis';
+import express from 'express'
+import cors from 'cors'
+import Parser from 'rss-parser'
+import crypto from 'crypto'
+import Redis from 'ioredis'
+import modelsRouter from './routes/models.js'
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+// --- APP INIT ---
+const app = express()
+app.use(cors())
+app.use(express.json())
 
-const parser = new Parser();
+// --- ROUTES ---
+app.use('/models', modelsRouter)
+
+const parser = new Parser()
 
 // --- HEALTH CHECK ---
-app.get('/health', (_req, res) => res.json({ ok: true }));
+app.get('/health', (_req, res) => res.json({ ok: true }))
 
 // --- REDIS CLIENT ---
 const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
   maxRetriesPerRequest: 2,
-});
-redis.on('error', (e) => console.error('[redis] error', e.message));
+})
+redis.on('error', (e) => console.error('[redis] error', e.message))
 
 // --- USER AUTH (demo only) ---
-const users = new Map<string, { hash: string; salt: string }>();
+const users = new Map<string, { hash: string; salt: string }>()
 
 function hashPassword(password: string, salt?: string) {
-  const s = salt || crypto.randomBytes(16).toString('hex');
-  const hash = crypto.pbkdf2Sync(password, s, 100_000, 32, 'sha256').toString('hex');
-  return { hash, salt: s };
+  const s = salt || crypto.randomBytes(16).toString('hex')
+  const hash = crypto
+    .pbkdf2Sync(password, s, 100_000, 32, 'sha256')
+    .toString('hex')
+  return { hash, salt: s }
 }
 
 app.post('/auth/signup', (req, res) => {
-  const { email, password } = req.body || {};
+  const { email, password } = req.body || {}
   if (!email || !password)
-    return res.status(400).json({ ok: false, error: 'Missing email or password' });
+    return res.status(400).json({ ok: false, error: 'Missing email or password' })
   if (users.has(email))
-    return res.status(409).json({ ok: false, error: 'User already exists' });
-  const { hash, salt } = hashPassword(password);
-  users.set(email, { hash, salt });
-  return res.json({ ok: true });
-});
+    return res.status(409).json({ ok: false, error: 'User already exists' })
+  const { hash, salt } = hashPassword(password)
+  users.set(email, { hash, salt })
+  return res.json({ ok: true })
+})
 
 app.post('/auth/login', (req, res) => {
-  const { email, password } = req.body || {};
+  const { email, password } = req.body || {}
   if (!email || !password)
-    return res.status(400).json({ ok: false, error: 'Missing email or password' });
-  const u = users.get(email);
-  if (!u) return res.status(401).json({ ok: false, error: 'Invalid credentials' });
-  const { hash } = hashPassword(password, u.salt);
+    return res.status(400).json({ ok: false, error: 'Missing email or password' })
+  const u = users.get(email)
+  if (!u) return res.status(401).json({ ok: false, error: 'Invalid credentials' })
+  const { hash } = hashPassword(password, u.salt)
   if (hash !== u.hash)
-    return res.status(401).json({ ok: false, error: 'Invalid credentials' });
-  return res.json({ ok: true });
-});
+    return res.status(401).json({ ok: false, error: 'Invalid credentials' })
+  return res.json({ ok: true })
+})
 
 // --- FEED SOURCES ---
 const FEED_SOURCES = [
-  // Core LLM / open-source ecosystem
-  {
-    id: 'huggingface-blog',
-    name: 'Hugging Face Blog',
-    url: 'https://huggingface.co/blog/feed.xml',
-    type: 'blog',
-  },
-  {
-    id: 'openai-news',
-    name: 'OpenAI News',
-    url: 'https://openai.com/news/rss.xml',
-    type: 'blog',
-  },
-  {
-    id: 'google-ai-blog',
-    name: 'Google AI Blog',
-    url: 'https://ai.googleblog.com/atom.xml',
-    type: 'blog',
-  },
-  {
-    id: 'deepmind-blog',
-    name: 'Google DeepMind Blog',
-    url: 'https://deepmind.com/blog/feed/basic',
-    type: 'blog',
-  },
-  {
-    id: 'pytorch-blog',
-    name: 'PyTorch Blog',
-    url: 'https://pytorch.org/feed',
-    type: 'blog',
-  },
-
-  {
-    id: 'ml-cmu-blog',
-    name: 'ML@CMU Blog',
-    url: 'https://blog.ml.cmu.edu/feed/',
-    type: 'blog',
-  },
-  {
-    id: 'distill',
-    name: 'Distill',
-    url: 'http://distill.pub/rss.xml',
-    type: 'paper',
-  },
-  {
-    id: 'jay-alammar',
-    name: 'Jay Alammar – Visualizing ML',
-    url: 'https://jalammar.github.io/feed.xml',
-    type: 'blog',
-  },
-  {
-    id: 'lilian-weng',
-    name: "Lilian Weng – Lil'Log",
-    url: 'https://lilianweng.github.io/lil-log/feed.xml',
-    type: 'blog',
-  },
-
-  // arXiv – more systematic paper coverage
+  { id: 'huggingface-blog', name: 'Hugging Face Blog', url: 'https://huggingface.co/blog/feed.xml', type: 'blog' },
+  { id: 'openai-news', name: 'OpenAI News', url: 'https://openai.com/news/rss.xml', type: 'blog' },
+  { id: 'google-ai-blog', name: 'Google AI Blog', url: 'https://ai.googleblog.com/atom.xml', type: 'blog' },
+  { id: 'deepmind-blog', name: 'Google DeepMind Blog', url: 'https://deepmind.com/blog/feed/basic', type: 'blog' },
+  { id: 'pytorch-blog', name: 'PyTorch Blog', url: 'https://pytorch.org/feed', type: 'blog' },
+  { id: 'ml-cmu-blog', name: 'ML@CMU Blog', url: 'https://blog.ml.cmu.edu/feed/', type: 'blog' },
+  { id: 'distill', name: 'Distill', url: 'http://distill.pub/rss.xml', type: 'paper' },
+  { id: 'jay-alammar', name: 'Jay Alammar – Visualizing ML', url: 'https://jalammar.github.io/feed.xml', type: 'blog' },
+  { id: 'lilian-weng', name: "Lilian Weng – Lil'Log", url: 'https://lilianweng.github.io/lil-log/feed.xml', type: 'blog' },
   {
     id: 'arxiv-llm',
     name: 'arXiv: LLM Papers',
-    url: 'https://export.arxiv.org/api/query?search_query=all:%5C%22large+language+model%5C%22+OR+ti:%5C%22LLM%5C%22&sortBy=submittedDate&sortOrder=descending&max_results=30',
+    url: 'https://export.arxiv.org/api/query?search_query=all:%5C%22large+language+model%5C%22&sortBy=submittedDate&sortOrder=descending&max_results=30',
     type: 'paper',
   },
-  {
-    id: 'arxiv-ml',
-    name: 'arXiv: Machine Learning (cs.LG)',
-    url: 'https://export.arxiv.org/api/query?search_query=cat:cs.LG&sortBy=submittedDate&sortOrder=descending&max_results=50',
-    type: 'paper',
-  },
-  {
-    id: 'arxiv-nlp',
-    name: 'arXiv: Computation and Language (cs.CL)',
-    url: 'https://export.arxiv.org/api/query?search_query=cat:cs.CL&sortBy=submittedDate&sortOrder=descending&max_results=50',
-    type: 'paper',
-  },
-];
+]
 
 // --- UTILITIES ---
 function fetchWithTimeout(url: string, ms = 7000) {
-  const controller = new AbortController();
-  const t = setTimeout(() => controller.abort(), ms);
-  return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(t));
+  const controller = new AbortController()
+  const t = setTimeout(() => controller.abort(), ms)
+  return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(t))
 }
 
-async function fetchTextWithFallbacks(
-  url: string
-): Promise<{ mode: 'json' | 'xml'; body: any }> {
-  // Try rss2json
+async function fetchTextWithFallbacks(url: string): Promise<{ mode: 'json' | 'xml'; body: any }> {
+  // rss2json
   try {
     const r = await fetchWithTimeout(
       `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`,
       7000
-    );
+    )
     if (r.ok) {
-      const data = await r.json();
-      if (data?.items) return { mode: 'json', body: data };
+      const data = await r.json()
+      if (data?.items) return { mode: 'json', body: data }
     }
   } catch {}
 
-  // Try allorigins
+  // allorigins
   try {
     const r = await fetchWithTimeout(
       `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
       7000
-    );
-    if (r.ok) return { mode: 'xml', body: await r.text() };
+    )
+    if (r.ok) return { mode: 'xml', body: await r.text() }
   } catch {}
 
-  // Last fallback: Jina proxy
+  // jina proxy
   const r3 = await fetchWithTimeout(
     `https://r.jina.ai/${url.startsWith('http') ? url : 'https://' + url}`,
     7000
-  );
-  if (!r3.ok) throw new Error('Fetch failed');
-  return { mode: 'xml', body: await r3.text() };
+  )
+  if (!r3.ok) throw new Error('Fetch failed')
+  return { mode: 'xml', body: await r3.text() }
 }
 
 function parseRssJson(json: any, source: any) {
-  const items = json.items || [];
+  const items = json.items || []
   return items.map((it: any) => ({
     id: it.guid || it.link || `${source.id}:${it.title}`,
     title: it.title || '',
@@ -183,193 +127,124 @@ function parseRssJson(json: any, source: any) {
     type: source.type,
     author: it.author || it.creator || json.feed?.author || '',
     summary: it.description || it.content || it.contentSnippet || '',
-  }));
+  }))
 }
 
 async function parseXml(xmlText: string, source: any) {
-  const feed = await parser.parseString(xmlText as string);
-  const items = feed.items || [];
-
+  const feed = await parser.parseString(xmlText)
+  const items = feed.items || []
   return items.map((it: any, i: number) => ({
     id: it.guid || it.link || `${source.id}:${i}`,
     title: it.title || '',
     link: it.link || '',
-    date:
-      it.isoDate ||
-      it.pubDate ||
-      it.published ||
-      it.updated ||
-      new Date().toISOString(),
+    date: it.isoDate || it.pubDate || it.published || it.updated || new Date().toISOString(),
     source: source.name,
     sourceId: source.id,
     type: source.type,
     author: it.author || it.creator || (feed as any).author || '',
-    summary:
-      it.contentSnippet ||
-      it.summary ||
-      it.content ||
-      it.description ||
-      '',
-  }));
+    summary: it.contentSnippet || it.summary || it.content || it.description || '',
+  }))
 }
 
 function dedupeAndSort(entries: any[], sort: 'newest' | 'oldest' = 'newest') {
-  const seen = new Set<string>();
-  const out: any[] = [];
+  const seen = new Set<string>()
+  const out: any[] = []
   for (const e of entries) {
-    const key = `${(e.title || '').toLowerCase()}__${(e.link || '').toLowerCase()}`;
+    const key = `${(e.title || '').toLowerCase()}__${(e.link || '').toLowerCase()}`
     if (!seen.has(key)) {
-      seen.add(key);
-      out.push(e);
+      seen.add(key)
+      out.push(e)
     }
   }
   out.sort((a, b) => {
-    const da = new Date(a.date).getTime() || 0;
-    const db = new Date(b.date).getTime() || 0;
-    return sort === 'oldest' ? da - db : db - da;
-  });
-  return out;
+    const da = new Date(a.date).getTime() || 0
+    const db = new Date(b.date).getTime() || 0
+    return sort === 'oldest' ? da - db : db - da
+  })
+  return out
 }
 
-// --- /FEEDS ENDPOINT (with caching) ---
-const FEEDS_TTL_SEC = Number(process.env.FEEDS_TTL_SEC || 120);
+// --- /FEEDS ENDPOINT (with optional caching) ---
+const FEEDS_TTL_SEC = Number(process.env.FEEDS_TTL_SEC || 120)
 
 app.get('/feeds', async (_req, res) => {
   try {
-    // check cached
-    const cached = await redis.get('feeds:combined');
-    if (cached) return res.json(JSON.parse(cached));
+    // cache (optional)
+    try {
+      const cached = await redis.get('feeds:combined')
+      if (cached) return res.json(JSON.parse(cached))
+    } catch {}
 
-    const MAX_CONC = 4;
-    const batches: any[][] = [];
+    const MAX_CONC = 4
+    const batches: any[][] = []
     for (let i = 0; i < FEED_SOURCES.length; i += MAX_CONC) {
-      batches.push(FEED_SOURCES.slice(i, i + MAX_CONC));
+      batches.push(FEED_SOURCES.slice(i, i + MAX_CONC))
     }
 
-    const collected: any[] = [];
+    const collected: any[] = []
     for (const batch of batches) {
       const settled = await Promise.allSettled(
         batch.map(async (s) => {
-          const sourceCache = await redis.get(`feeds:source:${s.id}`);
-          if (sourceCache) return JSON.parse(sourceCache);
+          try {
+            const sourceCache = await redis.get(`feeds:source:${s.id}`)
+            if (sourceCache) return JSON.parse(sourceCache)
+          } catch {}
 
-          const { mode, body } = await fetchTextWithFallbacks(s.url);
-          const items =
-            mode === 'json'
-              ? parseRssJson(body, s)
-              : await parseXml(body as string, s);
+          const { mode, body } = await fetchTextWithFallbacks(s.url)
+          const items = mode === 'json' ? parseRssJson(body, s) : await parseXml(body as string, s)
 
-          await redis.set(
-            `feeds:source:${s.id}`,
-            JSON.stringify(items),
-            'EX',
-            FEEDS_TTL_SEC
-          );
-          return items;
+          try {
+            await redis.set(`feeds:source:${s.id}`, JSON.stringify(items), 'EX', FEEDS_TTL_SEC)
+          } catch {}
+
+          return items
         })
-      );
+      )
+
       for (const r of settled) {
-        if (r.status === 'fulfilled') collected.push(...r.value);
+        if (r.status === 'fulfilled') collected.push(...r.value)
       }
     }
 
-    const final = dedupeAndSort(collected, 'newest');
-    await redis.set('feeds:combined', JSON.stringify(final), 'EX', FEEDS_TTL_SEC);
-    res.json(final);
+    const final = dedupeAndSort(collected, 'newest')
+
+    try {
+      await redis.set('feeds:combined', JSON.stringify(final), 'EX', FEEDS_TTL_SEC)
+    } catch {}
+
+    res.json(final)
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'Failed to fetch feeds' });
+    console.error(e)
+    res.status(500).json({ error: 'Failed to fetch feeds' })
   }
-});
-
-// --- /RECOMMEND ENDPOINT ---
-const MODEL_REGISTRY = [
-  {
-    name: 'Llama-3.1-70B',
-    provider: 'Self-host',
-    context: 8192,
-    latencyMs: 900,
-    costPer1kTokens: 0.002,
-    selfHost: true,
-    tags: ['finance', 'classification'],
-  },
-  {
-    name: 'GPT-4o-mini',
-    provider: 'OpenAI',
-    context: 128000,
-    latencyMs: 700,
-    costPer1kTokens: 0.15,
-    selfHost: false,
-    tags: ['reasoning'],
-  },
-  {
-    name: 'Mistral-Large',
-    provider: 'Mistral',
-    context: 32000,
-    latencyMs: 600,
-    costPer1kTokens: 0.12,
-    selfHost: false,
-    tags: ['classification', 'extraction'],
-  },
-];
-
-app.post('/recommend', (req, res) => {
-  try {
-    const { task = '', privacy = '', latency = 1200, context = 4000 } = req.body || {};
-    const needSelfHost = /self/i.test(String(privacy));
-    const minCtx = Math.max(0, Number(context) || 0);
-    const targetLatency = Math.max(1, Number(latency) || 1);
-    const isFinance = /finance|market|stock|earning/i.test(String(task));
-
-    const ranked = MODEL_REGISTRY.map((m) => {
-      let score = 0;
-      if (m.selfHost === needSelfHost) score += 2;
-      score += Math.min(2, Math.max(0, (m.context - minCtx) / 8000));
-      score += Math.max(0, 2 - m.latencyMs / targetLatency);
-      score += 1 / (m.costPer1kTokens + 0.01);
-      if (isFinance && m.tags?.includes('finance')) score += 0.6;
-      return { model: m, score };
-    }).sort((a, b) => b.score - a.score);
-
-    res.json({ ok: true, results: ranked });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ ok: false, error: 'recommend failed' });
-  }
-});
+})
 
 // --- START SERVER ---
-const DEFAULT_PORT = Number(process.env.PORT || 8787);
-let server: any = null;
+const DEFAULT_PORT = Number(process.env.PORT || 8787)
+let server: any = null
 
 function start(port: number) {
-  try {
-    server = app.listen(port, () =>
-      console.log(`worker listening on http://localhost:${port}`)
-    );
-    server.on('error', (err: any) => {
-      if (err?.code === 'EADDRINUSE') {
-        console.warn(`Port ${port} in use; retrying on ${port + 1}...`);
-        setTimeout(() => start(port + 1), 500);
-      } else {
-        console.error(err);
-      }
-    });
-  } catch (e) {
-    console.error(e);
-  }
+  server = app.listen(port, () => console.log(`worker listening on http://localhost:${port}`))
+  server.on('error', (err: any) => {
+    if (err?.code === 'EADDRINUSE') {
+      console.warn(`Port ${port} in use; retrying on ${port + 1}...`)
+      setTimeout(() => start(port + 1), 500)
+    } else {
+      console.error(err)
+    }
+  })
 }
 
 function gracefulShutdown() {
-  if (server) server.close(() => process.exit(0));
-  else process.exit(0);
+  if (server) server.close(() => process.exit(0))
+  else process.exit(0)
 }
 
 process.once('SIGUSR2', () => {
-  gracefulShutdown();
-  setTimeout(() => process.kill(process.pid, 'SIGUSR2'), 50);
-});
-process.on('SIGINT', gracefulShutdown);
-process.on('SIGTERM', gracefulShutdown);
+  gracefulShutdown()
+  setTimeout(() => process.kill(process.pid, 'SIGUSR2'), 50)
+})
+process.on('SIGINT', gracefulShutdown)
+process.on('SIGTERM', gracefulShutdown)
 
-start(DEFAULT_PORT);
+start(DEFAULT_PORT)

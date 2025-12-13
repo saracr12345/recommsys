@@ -1,4 +1,20 @@
 import { useState, type CSSProperties } from 'react'
+import { pageShell, card, input, primaryButton } from '@/ui/styles'
+import { api } from '@/lib/api'
+
+type AdvisorModel = {
+  name: string
+  provider: string
+  context: number
+  latencyMs: number
+  costPer1kTokens: number
+  tags: string[]
+}
+
+type AdvisorResult = {
+  model: AdvisorModel
+  score: number
+}
 
 export default function App() {
   const [task, setTask] = useState('financial sentiment')
@@ -6,8 +22,9 @@ export default function App() {
   const [latency, setLatency] = useState(1200)
   const [ctx, setCtx] = useState(4000)
   const [loading, setLoading] = useState(false)
-  const [results, setResults] = useState<any[]>([])
-  const [error, setError] = useState('')
+  const [results, setResults] = useState<AdvisorResult[]>([])
+  const [error, setError] = useState<string>('')
+  
 
   async function recommend() {
     setLoading(true)
@@ -15,7 +32,7 @@ export default function App() {
     setResults([])
 
     try {
-      const r = await fetch('http://localhost:8787/recommend', {
+      const data = await api<{ results: AdvisorResult[] }>('/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -26,10 +43,7 @@ export default function App() {
         }),
       })
 
-      if (!r.ok) throw new Error('Recommendation failed')
-
-      const data = await r.json()
-      setResults(data.results)
+      setResults(data.results ?? [])
     } catch (e: any) {
       setError(e.message || 'Error')
     } finally {
@@ -182,25 +196,14 @@ export default function App() {
 
 /* ---------- styles ---------- */
 
-const pageStyle: CSSProperties = {
-  background: '#f8fafc', // same as tracker page
-  minHeight: 'calc(100vh - 56px)', // allow for top nav height
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'flex-start',
-  padding: '32px 16px',
-}
-
-const cardStyle: CSSProperties = {
-  background: '#ffffff',
-  borderRadius: 16,
-  border: '1px solid #e2e8f0',
-  boxShadow: '0 4px 12px rgba(15,23,42,0.06)',
-  padding: 24,
-  width: 560,
-  maxWidth: '100%',
-  display: 'grid',
-  gap: 12,
+const pageStyle: CSSProperties = { ...pageShell }
+const cardStyle: CSSProperties = { ...card, width: 560 }
+const inputStyle: CSSProperties = { ...input } // already has boxSizing
+const buttonStyle: CSSProperties = {
+  ...primaryButton,
+  marginTop: 8,
+  width: 180,
+  justifySelf: 'center',
 }
 
 const fieldStyle: CSSProperties = {
@@ -213,31 +216,6 @@ const labelStyle: CSSProperties = {
   color: '#475569',
 }
 
-const inputStyle: CSSProperties = {
-  padding: '8px 10px',
-  borderRadius: 8,
-  border: '1px solid #cbd5e1',
-  background: '#ffffff',
-  color: '#0f172a',
-  width: '100%',
-  fontSize: 14,
-  outline: 'none',
-  boxSizing: 'border-box', // prevents overflow out of the card
-} as const
-
-const buttonStyle: CSSProperties = {
-  marginTop: 8,
-  padding: '10px 12px',
-  borderRadius: 8,
-  border: '1px solid #1d4ed8',
-  background: '#3b82f6',
-  color: '#ffffff',
-  width: 180,
-  justifySelf: 'center',
-  cursor: 'pointer',
-  fontSize: 14,
-  fontWeight: 500,
-}
 
 const errorStyle: CSSProperties = {
   color: '#b91c1c',

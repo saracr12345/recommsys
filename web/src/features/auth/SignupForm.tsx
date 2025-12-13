@@ -1,4 +1,6 @@
+// web/src/features/auth/SignupForm.tsx
 import { useState, type CSSProperties, type FormEvent } from 'react'
+import { pageShell, card, input, primaryButton } from '@/ui/styles'
 
 export default function SignupForm() {
   const [email, setEmail] = useState('')
@@ -104,24 +106,12 @@ export default function SignupForm() {
 /* ---------- styles ---------- */
 
 const pageStyle: CSSProperties = {
-  background: '#f8fafc', // same as leaderboard / advisor / login
-  minHeight: 'calc(100vh - 56px)', // allow for top nav
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'flex-start',
-  padding: '32px 16px',
+  ...pageShell,
 }
 
 const cardStyle: CSSProperties = {
-  background: '#ffffff',
-  borderRadius: 16,
-  border: '1px solid #e2e8f0',
-  boxShadow: '0 4px 12px rgba(15,23,42,0.06)',
-  padding: 24,
+  ...card,
   width: 380,
-  maxWidth: '100%',
-  display: 'grid',
-  gap: 12,
 }
 
 const fieldStyle: CSSProperties = {
@@ -135,28 +125,14 @@ const labelStyle: CSSProperties = {
 }
 
 const inputStyle: CSSProperties = {
-  padding: '8px 10px',
-  borderRadius: 8,
-  border: '1px solid #cbd5e1',
-  background: '#ffffff',
-  color: '#0f172a',
-  width: '100%',
-  fontSize: 14,
-  outline: 'none',
-  boxSizing: 'border-box',   //inside the card
+  ...input,
+  boxSizing: 'border-box', // keep inside the card
 } as const
 
 const buttonStyle: CSSProperties = {
+  ...primaryButton,
   marginTop: 8,
-  padding: '10px 12px',
-  borderRadius: 8,
-  border: '1px solid #1d4ed8',
-  background: '#3b82f6',
-  color: '#ffffff',
   width: '100%',
-  cursor: 'pointer',
-  fontSize: 14,
-  fontWeight: 500,
 }
 
 const messageStyle: CSSProperties = {

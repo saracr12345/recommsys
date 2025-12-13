@@ -1,21 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model User {
-  id       Int    @id @default(autoincrement())
-  email    String @unique
-  password String
+  id        Int                   @id @default(autoincrement())
+  email     String                @unique
+  password  String
+  createdAt DateTime              @default(now())
+
+  events    RecommendationEvent[]
 }
 
-model Item {
-  id       Int    @id @default(autoincrement())
-  title    String
-  category String?
+model ModelProfile {
+  id              String   @id
+  name            String
+  provider        String?
+  family          String?
+
+  contextWindow   Int?
+  latencyMs       Int?
+  costPer1kTokens Float?
+  apiType         String?
+
+  // stored as JSON array of strings
+  domainTags      Json     @default("[]")
+
+  modality        String?  // NEW
+  license         String?  // NEW
+
+  source          String?
+  url             String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
+
+model RecommendationEvent {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+
+  task       String
+  privacy    String
+  latency    Int
+  context    Int
+
+  results    Json
+
+  userId     Int?
+  user       User?    @relation(fields: [userId], references: [id])
+}

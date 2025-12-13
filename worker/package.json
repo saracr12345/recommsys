@@ -4,10 +4,12 @@
   "type": "module",
   "version": "0.0.0",
   "scripts": {
-    "dev": "nodemon --watch src --exec ts-node src/index.ts",
-    "build": "tsc -p ."
+  "dev": "nodemon --watch src --exec node --loader ts-node/esm src/index.ts",
+    "build": "tsc -p .",
+    "seed": "ts-node scripts/seedModels.ts"
   },
-  "dependencies": {
+    "dependencies": {
+    "@recommsys/shared": "file:../shared",
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "ioredis": "^5.8.2",

@@ -1,5 +1,6 @@
 // web/src/features/auth/LoginForm.tsx
 import { useState, type CSSProperties, type FormEvent } from 'react'
+import { pageShell, card, input, primaryButton } from '@/ui/styles'
 
 export default function LoginForm() {
   const [email, setEmail] = useState('')
@@ -9,7 +10,7 @@ export default function LoginForm() {
   function onSubmit(e: FormEvent) {
     e.preventDefault()
     setError('') // hook up real auth later
-    // TODO: call backend / Firebase .
+    // TODO: call your backend / Firebase etc.
   }
 
   return (
@@ -96,24 +97,12 @@ export default function LoginForm() {
 /* ---------- styles ---------- */
 
 const pageStyle: CSSProperties = {
-  background: '#f8fafc', // same as tracker / advisor
-  minHeight: 'calc(100vh - 56px)', // account for top nav
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'flex-start',
-  padding: '32px 16px',
+  ...pageShell,
 }
 
 const cardStyle: CSSProperties = {
-  background: '#ffffff',
-  borderRadius: 16,
-  border: '1px solid #e2e8f0',
-  boxShadow: '0 4px 12px rgba(15,23,42,0.06)',
-  padding: 24,
+  ...card,
   width: 380,
-  maxWidth: '100%',
-  display: 'grid',
-  gap: 12,
 }
 
 const fieldStyle: CSSProperties = {
@@ -127,28 +116,14 @@ const labelStyle: CSSProperties = {
 }
 
 const inputStyle: CSSProperties = {
-  padding: '8px 10px',
-  borderRadius: 8,
-  border: '1px solid #cbd5e1',
-  background: '#ffffff',
-  color: '#0f172a',
-  width: '100%',
-  fontSize: 14,
-  outline: 'none',
-  boxSizing: 'border-box',   // 👈 fix overflow
+  ...input,
+  boxSizing: 'border-box', // keep explicit to avoid overflow
 } as const
 
 const buttonStyle: CSSProperties = {
+  ...primaryButton,
   marginTop: 8,
-  padding: '10px 12px',
-  borderRadius: 8,
-  border: '1px solid #1d4ed8',
-  background: '#3b82f6',
-  color: '#ffffff',
   width: '100%',
-  cursor: 'pointer',
-  fontSize: 14,
-  fontWeight: 500,
 }
 
 const errorStyle: CSSProperties = {
