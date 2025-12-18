@@ -1,34 +1,43 @@
-import { useState, type CSSProperties, type FormEvent } from 'react'
-import { pageShell, card, input, primaryButton } from '@/ui/styles'
+import { useState, type CSSProperties, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { pageShell, card, input, primaryButton } from '@/ui/styles';
+import { api } from '@/lib/api';
+import { useAuth } from '@/features/auth/AuthContext';
 
 export default function SignupForm() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [msg, setMsg] = useState('')
-  const [submitting, setSubmitting] = useState(false)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [msg, setMsg] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const { setUser } = useAuth();
+  const navigate = useNavigate();
 
   async function submit(e: FormEvent) {
-    e.preventDefault()
-    setSubmitting(true)
-    setMsg('')
+    e.preventDefault();
+    setSubmitting(true);
+    setMsg('');
 
     try {
-      const r = await fetch('http://localhost:8787/auth/signup', {
+      const data = await api<{
+        ok: boolean;
+        user?: { id: number; email: string };
+        error?: string;
+      }>('/auth/signup', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
-      })
-      const data = await r.json().catch(() => ({}))
+      });
 
-      if (r.ok && data?.ok) {
-        setMsg('Account created. You can log in now.')
+      if (data.ok && data.user) {
+        setUser(data.user);
+        setMsg('Account created!');
+        navigate('/welcome');
       } else {
-        setMsg(data?.error || 'Sign up failed')
+        setMsg(data.error || 'Sign up failed');
       }
-    } catch {
-      setMsg('Network error')
+    } catch (err: any) {
+      setMsg(err?.message || 'Network error');
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
   }
 
@@ -99,40 +108,40 @@ export default function SignupForm() {
         </button>
       </form>
     </div>
-  )
+  );
 }
 
 /* ---------- styles ---------- */
 
 const pageStyle: CSSProperties = {
   ...pageShell,
-}
+};
 
 const cardStyle: CSSProperties = {
   ...card,
   width: 380,
-}
+};
 
 const fieldStyle: CSSProperties = {
   display: 'grid',
   gap: 4,
-}
+};
 
 const labelStyle: CSSProperties = {
   fontSize: 13,
   color: '#475569',
-}
+};
 
 const inputStyle: CSSProperties = {
   ...input,
   boxSizing: 'border-box', // keep inside the card
-} as const
+} as const;
 
 const buttonStyle: CSSProperties = {
   ...primaryButton,
   marginTop: 8,
   width: '100%',
-}
+};
 
 const messageStyle: CSSProperties = {
   marginTop: 8,
@@ -143,4 +152,4 @@ const messageStyle: CSSProperties = {
   background: '#eff6ff',
   border: '1px solid #bfdbfe',
   color: '#1d4ed8',
-}
+};
