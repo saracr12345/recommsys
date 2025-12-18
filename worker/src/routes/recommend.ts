@@ -109,8 +109,9 @@ router.post('/', async (req, res) => {
         latency: Number(latency) || 0,
         context: Number(context) || 0,
         results: results.slice(0, 5) as any,
+        userId: req.userId ?? null,   // now tied to authenticated user
       },
-    })
+    });
 
     res.json({ ok: true, results })
   } catch (err) {
