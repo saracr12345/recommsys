@@ -10,6 +10,7 @@ import TopNav from './features/layout/TopNav';
 import Sidebar from './features/layout/Sidebar';
 import AIChat from './pages/AIChat';
 import Welcome from './pages/Welcome';
+import Dashboard from './pages/Dashboard'; 
 import { AuthProvider } from './features/auth/AuthContext';
 
 // Lazy-load the advisor app
@@ -42,7 +43,11 @@ function Shell() {
             <Routes>
               <Route path="/" element={<TrackerPage />} />
               <Route path="/tracker" element={<TrackerPage />} />
+
               <Route path="/advisor" element={<AdvisorApp />} />
+
+              <Route path="/dashboard" element={<Dashboard />} />
+
               <Route path="/aichat" element={<AIChat />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />

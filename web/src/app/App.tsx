@@ -1,52 +1,52 @@
-import { useState, type CSSProperties } from 'react'
-import { pageShell, card, input, primaryButton } from '@/ui/styles'
-import { api } from '@/lib/api'
+import { useState, type CSSProperties } from 'react';
+import { pageShell, card, input, primaryButton } from '@/ui/styles';
+import { api } from '@/lib/api';
 
 // ---- types that match the backend /recommend response ----
 
 type AdvisorModel = {
-  name: string
-  provider: string
-  context: number
-  latencyMs: number
-  costPer1kTokens: number
-  tags: string[]
-}
+  name: string;
+  provider: string;
+  context: number;
+  latencyMs: number;
+  costPer1kTokens: number;
+  tags: string[];
+};
 
 type AdvisorFactors = {
-  privacyMatch: number
-  ctxScore: number
-  latencyScore: number
-  costScore: number
-  domainScore: number
-}
+  privacyMatch: number;
+  ctxScore: number;
+  latencyScore: number;
+  costScore: number;
+  domainScore: number;
+};
 
 type AdvisorResult = {
-  model: AdvisorModel
-  score: number
-  confidence?: number
-  factors?: AdvisorFactors
-  why?: string[]
-}
+  model: AdvisorModel;
+  score: number;
+  confidence?: number;
+  factors?: AdvisorFactors;
+  why?: string[];
+};
 
 type RecommendResponse = {
-  ok: boolean
-  results: AdvisorResult[]
-}
+  ok: boolean;
+  results: AdvisorResult[];
+};
 
 export default function App() {
-  const [task, setTask] = useState('financial sentiment')
-  const [privacy, setPrivacy] = useState('Self-host')
-  const [latency, setLatency] = useState(1200)
-  const [ctx, setCtx] = useState(4000)
-  const [loading, setLoading] = useState(false)
-  const [results, setResults] = useState<AdvisorResult[]>([])
-  const [error, setError] = useState<string>('')
+  const [task, setTask] = useState('financial sentiment');
+  const [privacy, setPrivacy] = useState('Self-host');
+  const [latency, setLatency] = useState(1200);
+  const [ctx, setCtx] = useState(4000);
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState<AdvisorResult[]>([]);
+  const [error, setError] = useState<string>('');
 
   async function recommend() {
-    setLoading(true)
-    setError('')
-    setResults([])
+    setLoading(true);
+    setError('');
+    setResults([]);
 
     try {
       const data = await api<RecommendResponse>('/recommend', {
@@ -58,25 +58,25 @@ export default function App() {
           latency,
           context: ctx,
         }),
-      })
+      });
 
       if (!data.ok) {
-        throw new Error('Recommendation failed')
+        throw new Error('Recommendation failed');
       }
 
-      setResults(data.results ?? [])
+      setResults(data.results ?? []);
     } catch (e: any) {
-      setError(e.message || 'Error')
+      setError(e.message || 'Error');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   function confidenceLabel(conf?: number): string {
-    if (conf == null) return ''
-    if (conf >= 0.75) return 'High'
-    if (conf >= 0.5) return 'Medium'
-    return 'Low'
+    if (conf == null) return '';
+    if (conf >= 0.75) return 'High';
+    if (conf >= 0.5) return 'Medium';
+    return 'Low';
   }
 
   return (
@@ -174,8 +174,8 @@ export default function App() {
           )}
 
           {results.map((res, i) => {
-            const isTop = i === 0 && res.confidence != null
-            const label = confidenceLabel(res.confidence)
+            const isTop = i === 0 && res.confidence != null;
+            const label = confidenceLabel(res.confidence);
 
             return (
               <div key={res.model.name} style={resultCardStyle}>
@@ -274,53 +274,53 @@ export default function App() {
                   Score: {res.score.toFixed(2)}
                 </div>
               </div>
-            )
+            );
           })}
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 /* ---------- styles ---------- */
 
-const pageStyle: CSSProperties = { ...pageShell }
-const cardStyle: CSSProperties = { ...card, width: 560 }
-const inputStyle: CSSProperties = { ...input }
+const pageStyle: CSSProperties = { ...pageShell };
+const cardStyle: CSSProperties = { ...card, width: 560 };
+const inputStyle: CSSProperties = { ...input };
 const buttonStyle: CSSProperties = {
   ...primaryButton,
   marginTop: 8,
   width: 180,
   justifySelf: 'center',
-}
+};
 
 const fieldStyle: CSSProperties = {
   display: 'grid',
   gap: 4,
-}
+};
 
 const labelStyle: CSSProperties = {
   fontSize: 13,
   color: '#475569',
-}
+};
 
 const errorStyle: CSSProperties = {
   color: '#b91c1c',
   background: '#fee2e2',
-  border: '1px solid #fecaca',
+  border: '1px solid #fecaca', // ✅ correct string
   padding: 10,
   borderRadius: 8,
   marginTop: 10,
   textAlign: 'center',
   fontSize: 13,
-}
+};
 
 const helperTextStyle: CSSProperties = {
   textAlign: 'center',
   opacity: 0.7,
   fontSize: 13,
   color: '#6b7280',
-}
+};
 
 const resultCardStyle: CSSProperties = {
   padding: 14,
@@ -328,4 +328,4 @@ const resultCardStyle: CSSProperties = {
   background: '#ffffff',
   border: '1px solid #e2e8f0',
   boxShadow: '0 1px 2px rgba(15,23,42,0.04)',
-}
+};

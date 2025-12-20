@@ -40,6 +40,7 @@ function TabLink({ to, children }: TabLinkProps) {
 export default function TopNav() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const initials = user?.email
     ? user.email.trim()[0]?.toUpperCase() || 'U'
@@ -50,6 +51,17 @@ export default function TopNav() {
       ? user.email.slice(0, 24) + '…'
       : user?.email ?? '';
 
+  function handleDashboardClick() {
+    setMenuOpen(false);
+    navigate('/dashboard');
+  }
+
+  function handleLogoutClick() {
+    setMenuOpen(false);
+    void logout();
+    navigate('/login');
+  }
+
   return (
     <header
       style={{
@@ -57,7 +69,6 @@ export default function TopNav() {
         top: 0,
         zIndex: 20,
         background: '#ffffff',
-        // thin line across the top nav
         borderBottom: '1px solid rgba(15,23,42,0.08)',
       }}
     >
@@ -86,7 +97,7 @@ export default function TopNav() {
           <TabLink to="/aichat">AIChat</TabLink>
         </nav>
 
-        {/* RIGHT SIDE – auth controls */}
+        {/* RIGHT SIDE – avatar + menu */}
         <div
           style={{
             flex: 1,
@@ -100,15 +111,14 @@ export default function TopNav() {
           {user ? (
             <div
               style={{
+                position: 'relative',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 10,
               }}
             >
-              {/* avatar + email acts as "profile" */}
               <button
                 type="button"
-                onClick={() => navigate('/welcome')}
+                onClick={() => setMenuOpen((v) => !v)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -147,23 +157,59 @@ export default function TopNav() {
                 </span>
               </button>
 
-              {/* small logout link */}
-              <button
-                type="button"
-                onClick={() => {
-                  void logout();
-                  navigate('/login');
-                }}
-                style={{
-                  border: 'none',
-                  background: 'transparent',
-                  fontSize: 13,
-                  color: '#6b7280',
-                  cursor: 'pointer',
-                }}
-              >
-                Log out
-              </button>
+              {/* DROPDOWN MENU */}
+              {menuOpen && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: '115%',
+                    minWidth: 180,
+                    background: '#ffffff',
+                    borderRadius: 10,
+                    boxShadow: '0 10px 30px rgba(15,23,42,0.15)',
+                    border: '1px solid rgba(148,163,184,0.35)',
+                    padding: 6,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    zIndex: 50,
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={handleDashboardClick}
+                    style={{
+                      border: 'none',
+                      background: 'transparent',
+                      textAlign: 'left',
+                      padding: '8px 10px',
+                      borderRadius: 8,
+                      fontSize: 13,
+                      color: '#111827',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Dashboard
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleLogoutClick}
+                    style={{
+                      border: 'none',
+                      background: 'transparent',
+                      textAlign: 'left',
+                      padding: '8px 10px',
+                      borderRadius: 8,
+                      fontSize: 13,
+                      color: '#b91c1c',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Log out
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <>
