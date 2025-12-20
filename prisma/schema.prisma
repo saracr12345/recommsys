@@ -12,6 +12,7 @@ model User {
   email     String                @unique
   password  String
   createdAt DateTime              @default(now())
+  threads ChatThread[]
 
   events    RecommendationEvent[]
 }
@@ -54,4 +55,29 @@ model RecommendationEvent {
 
   userId     Int?
   user       User?    @relation(fields: [userId], references: [id])
+}
+
+model ChatThread {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  title     String?
+
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+
+  messages  ChatMessage[]
+}
+
+model ChatMessage {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  role      String   // "user" | "assistant" | "system"
+  content   String
+  model     String?
+
+  threadId  Int
+  thread    ChatThread @relation(fields: [threadId], references: [id])
 }

@@ -1,23 +1,16 @@
-// VERY TOP of worker/src/index.ts
-process.on('uncaughtException', (err) => {
-  console.error('UNCAUGHT EXCEPTION >>>', err);
-});
-process.on('unhandledRejection', (reason) => {
-  console.error('UNHANDLED REJECTION >>>', reason);
-});
-
-console.log('Worker index starting…');
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import Parser from 'rss-parser';
 import cookieParser from 'cookie-parser';
-
 import modelsRouter from './routes/models.js';
 import recommendRouter from './routes/recommend.js';
 import recommendationsRouter from './routes/recommendations.js';
 import authRouter from './routes/auth.js';
 import { authMiddleware, requireAuth } from './middleware/auth.js';
 import { redis } from './redis.js';
+import chatRouter from "./routes/chat.js";
+
 
 // --- APP INIT ---
 const app = express();
@@ -41,6 +34,7 @@ app.use('/auth', authRouter);
 app.use('/models', requireAuth, modelsRouter);
 app.use('/recommend', requireAuth, recommendRouter);
 app.use('/recommendations', requireAuth, recommendationsRouter);
+app.use("/chat", requireAuth, chatRouter);
 
 // --- HEALTH CHECK ---
 app.get('/health', (_req, res) => res.json({ ok: true }));
