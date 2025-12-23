@@ -71,7 +71,7 @@ export default function SignupForm() {
               textAlign: 'center',
             }}
           >
-            Start using LLM Area with a free account.
+            Start using LLM Advisor with a free account.
           </p>
         </div>
 

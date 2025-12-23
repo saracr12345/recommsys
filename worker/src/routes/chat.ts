@@ -56,7 +56,7 @@ router.post("/", async (req, res) => {
     const response = await openai.responses.create({
       model,
       instructions:
-        "You are the LLM Area assistant. Help users with model recommendations, LLM research questions, and guidance inside this app. Be practical, concise, and truthful.",
+        "You are the LLM Advisor assistant. Help users with model recommendations, LLM research questions, and guidance inside this app. Be practical, concise, and truthful.",
       input: transcript,
     });
 

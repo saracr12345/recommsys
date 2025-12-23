@@ -88,7 +88,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             {/* short logo */}
             <img
               src="/shortlogo.jpeg"
-              alt="LLM Area"
+              alt="LLM Advisor"
               style={{
                 width: 40,
                 height: 40,
@@ -115,7 +115,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               >
                 <img
                   src="/logo.jpeg"
-                  alt="LLM Area"
+                  alt="LLM Advisor"
                   style={{
                     height: 25,
                     maxWidth: '100%',

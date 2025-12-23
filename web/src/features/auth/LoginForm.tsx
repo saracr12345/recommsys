@@ -75,7 +75,7 @@ export default function LoginForm() {
               textAlign: 'center',
             }}
           >
-            Enter your details to access LLM Area.
+            Enter your details to access LLM Advisor.
           </p>
         </div>
 
