@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { pageShell, card } from '@/ui/styles';
+import { pageShell, card, primaryButton, colors } from '@/ui/styles';
 import { api } from '@/lib/api';
 
 type RecommendationListItem = {
@@ -56,7 +56,7 @@ export default function Dashboard() {
               margin: 0,
               fontSize: 20,
               fontWeight: 700,
-              color: '#0f172a',
+              color: colors.textMain,
             }}
           >
             Dashboard
@@ -66,7 +66,7 @@ export default function Dashboard() {
               marginTop: 6,
               marginBottom: 0,
               fontSize: 14,
-              color: '#475569',
+              color: colors.textMuted,
             }}
           >
             Your recent LLM Advisor runs, saved automatically with the task and
@@ -78,30 +78,16 @@ export default function Dashboard() {
           onClick={load}
           disabled={loading}
           style={{
-            fontSize: 13,
-            padding: '6px 12px',
-            borderRadius: 999,
-            border: '1px solid #e2e8f0',
-            background: '#f9fafb',
+            ...secondaryRefreshButton,
+            opacity: loading ? 0.7 : 1,
             cursor: loading ? 'default' : 'pointer',
-            marginBottom: 12,
           }}
         >
           {loading ? 'Refreshing…' : 'Refresh'}
         </button>
 
         {error && (
-          <div
-            style={{
-              color: '#b91c1c',
-              background: '#fee2e2',
-              border: '1px solid #fecaca',
-              padding: 10,
-              borderRadius: 8,
-              marginBottom: 10,
-              fontSize: 13,
-            }}
-          >
+          <div style={errorBox}>
             {error}
           </div>
         )}
@@ -110,7 +96,7 @@ export default function Dashboard() {
           <div
             style={{
               fontSize: 13,
-              color: '#6b7280',
+              color: colors.textMuted,
             }}
           >
             No recommendations yet. Run the Advisor to see them here.
@@ -129,7 +115,7 @@ export default function Dashboard() {
 
             return (
               <div key={item.id} style={rowStyle}>
-                <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 4 }}>
+                <div style={{ fontSize: 13, color: colors.textMuted, marginBottom: 4 }}>
                   {dateStr}
                 </div>
 
@@ -137,7 +123,7 @@ export default function Dashboard() {
                   style={{
                     fontSize: 15,
                     fontWeight: 600,
-                    color: '#0f172a',
+                    color: colors.textMain,
                     marginBottom: 4,
                   }}
                 >
@@ -147,7 +133,7 @@ export default function Dashboard() {
                 <div
                   style={{
                     fontSize: 13,
-                    color: '#374151',
+                    color: colors.textMain,
                     lineHeight: 1.5,
                   }}
                 >
@@ -186,6 +172,27 @@ const cardStyle: CSSProperties = {
 const rowStyle: CSSProperties = {
   padding: 12,
   borderRadius: 12,
-  border: '1px solid #e2e8f0',
-  background: '#ffffff',
+  border: `1px solid ${colors.borderSubtle}`,
+  background: colors.white,
+};
+
+const secondaryRefreshButton: CSSProperties = {
+  padding: '6px 14px',
+  borderRadius: 999,
+  border: `1px solid ${colors.borderSubtle}`,
+  background: colors.white,
+  cursor: 'pointer',
+  marginBottom: 12,
+  fontSize: 13,
+  color: colors.textMain,
+};
+
+const errorBox: CSSProperties = {
+  color: colors.danger,
+  background: colors.dangerSoft,
+  border: `1px solid ${colors.dangerBorder}`,
+  padding: 10,
+  borderRadius: 8,
+  marginBottom: 10,
+  fontSize: 13,
 };

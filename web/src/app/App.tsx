@@ -1,9 +1,9 @@
+// src/app/App.tsx
 import { useState, type CSSProperties } from 'react';
-import { pageShell, card, input, primaryButton } from '@/ui/styles';
+import { pageShell, card, input, primaryButton, colors } from '@/ui/styles';
 import { api } from '@/lib/api';
 
 // ---- types that match the backend /recommend response ----
-
 type AdvisorModel = {
   name: string;
   provider: string;
@@ -82,14 +82,13 @@ export default function App() {
   return (
     <div style={pageStyle}>
       <div style={cardStyle}>
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 12, textAlign: 'center' }}>
           <h2
             style={{
               margin: 0,
-              fontSize: 20,
+              fontSize: 22,
               fontWeight: 700,
-              color: '#0f172a',
-              textAlign: 'center',
+              color: colors.textMain,
             }}
           >
             LLM Advisor
@@ -99,8 +98,7 @@ export default function App() {
               marginTop: 6,
               marginBottom: 0,
               fontSize: 14,
-              color: '#475569',
-              textAlign: 'center',
+              color: colors.textMuted,
             }}
           >
             Input your task → get the best model ranked for you.
@@ -185,13 +183,14 @@ export default function App() {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     marginBottom: 4,
+                    gap: 12,
                   }}
                 >
                   <div
                     style={{
                       fontSize: 16,
                       fontWeight: 600,
-                      color: '#0f172a',
+                      color: colors.textMain,
                     }}
                   >
                     #{i + 1} — {res.model.name}
@@ -201,11 +200,12 @@ export default function App() {
                     <span
                       style={{
                         fontSize: 11,
-                        padding: '2px 8px',
+                        padding: '2px 10px',
                         borderRadius: 999,
-                        border: '1px solid #bfdbfe',
-                        background: '#dbeafe',
-                        color: '#1d4ed8',
+                        border: `1px solid ${colors.blueBorder}`,
+                        background: colors.blueSoft,
+                        color: '#035781',
+                        whiteSpace: 'nowrap',
                       }}
                     >
                       Confidence: {res.confidence!.toFixed(2)} ({label})
@@ -216,7 +216,7 @@ export default function App() {
                 <div
                   style={{
                     fontSize: 13,
-                    color: '#1f2937',
+                    color: colors.textMain,
                     lineHeight: 1.5,
                   }}
                 >
@@ -239,7 +239,7 @@ export default function App() {
                       marginBottom: 0,
                       paddingLeft: 18,
                       fontSize: 12,
-                      color: '#4b5563',
+                      color: colors.textMuted,
                     }}
                   >
                     {res.why.map((w) => (
@@ -254,7 +254,7 @@ export default function App() {
                     style={{
                       marginTop: 6,
                       fontSize: 11,
-                      color: '#6b7280',
+                      color: colors.textMuted,
                     }}
                   >
                     Cost score: {res.factors.costScore.toFixed(2)} ·{' '}
@@ -268,7 +268,7 @@ export default function App() {
                     marginTop: 6,
                     fontSize: 13,
                     fontWeight: 600,
-                    color: '#1d4ed8',
+                    color: colors.emeraldDark,
                   }}
                 >
                   Score: {res.score.toFixed(2)}
@@ -285,12 +285,18 @@ export default function App() {
 /* ---------- styles ---------- */
 
 const pageStyle: CSSProperties = { ...pageShell };
-const cardStyle: CSSProperties = { ...card, width: 560 };
+
+const cardStyle: CSSProperties = {
+  ...card,
+  width: 560,
+};
+
 const inputStyle: CSSProperties = { ...input };
+
 const buttonStyle: CSSProperties = {
   ...primaryButton,
-  marginTop: 8,
-  width: 180,
+  marginTop: 12,
+  width: 200,
   justifySelf: 'center',
 };
 
@@ -301,13 +307,13 @@ const fieldStyle: CSSProperties = {
 
 const labelStyle: CSSProperties = {
   fontSize: 13,
-  color: '#475569',
+  color: colors.textMuted,
 };
 
 const errorStyle: CSSProperties = {
-  color: '#b91c1c',
-  background: '#fee2e2',
-  border: '1px solid #fecaca', // ✅ correct string
+  color: colors.danger,
+  background: colors.dangerSoft,
+  border: `1px solid ${colors.dangerBorder}`,
   padding: 10,
   borderRadius: 8,
   marginTop: 10,
@@ -317,15 +323,15 @@ const errorStyle: CSSProperties = {
 
 const helperTextStyle: CSSProperties = {
   textAlign: 'center',
-  opacity: 0.7,
+  opacity: 0.8,
   fontSize: 13,
-  color: '#6b7280',
+  color: colors.textMuted,
 };
 
 const resultCardStyle: CSSProperties = {
   padding: 14,
-  borderRadius: 12,
-  background: '#ffffff',
-  border: '1px solid #e2e8f0',
-  boxShadow: '0 1px 2px rgba(15,23,42,0.04)',
+  borderRadius: 14,
+  background: colors.white,
+  border: `1px solid ${colors.borderSubtle}`,
+  boxShadow: '0 4px 14px rgba(0,0,0,0.04)',
 };

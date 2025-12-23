@@ -1,6 +1,12 @@
 import { useState, type CSSProperties, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { pageShell, card, input, primaryButton } from '@/ui/styles';
+import {
+  pageShell,
+  card,
+  input,
+  primaryButton,
+  colors,
+} from '@/ui/styles';
 import { api } from '@/lib/api';
 import { useAuth } from '@/features/auth/AuthContext';
 
@@ -50,7 +56,7 @@ export default function SignupForm() {
               margin: 0,
               fontSize: 20,
               fontWeight: 700,
-              color: '#0f172a',
+              color: colors.textMain,
               textAlign: 'center',
             }}
           >
@@ -61,7 +67,7 @@ export default function SignupForm() {
               marginTop: 6,
               marginBottom: 0,
               fontSize: 14,
-              color: '#475569',
+              color: colors.textMuted,
               textAlign: 'center',
             }}
           >
@@ -101,7 +107,11 @@ export default function SignupForm() {
           </div>
         </div>
 
-        {!!msg && <div style={messageStyle}>{msg}</div>}
+        {!!msg && (
+          <div style={messageStyle}>
+            {msg}
+          </div>
+        )}
 
         <button type="submit" disabled={submitting} style={buttonStyle}>
           {submitting ? 'Creating…' : 'Create account'}
@@ -129,12 +139,12 @@ const fieldStyle: CSSProperties = {
 
 const labelStyle: CSSProperties = {
   fontSize: 13,
-  color: '#475569',
+  color: colors.textMuted,
 };
 
 const inputStyle: CSSProperties = {
   ...input,
-  boxSizing: 'border-box', // keep inside the card
+  boxSizing: 'border-box',
 } as const;
 
 const buttonStyle: CSSProperties = {
@@ -149,7 +159,7 @@ const messageStyle: CSSProperties = {
   borderRadius: 8,
   fontSize: 13,
   textAlign: 'center',
-  background: '#eff6ff',
-  border: '1px solid #bfdbfe',
-  color: '#1d4ed8',
+  background: colors.blueSoft,
+  border: `1px solid ${colors.blueBorder}`,
+  color: '#035781',
 };

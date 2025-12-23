@@ -1,5 +1,7 @@
-import { useState, type CSSProperties, type ReactNode } from 'react'
-import { NavLink } from 'react-router-dom'
+// src/features/layout/Sidebar.tsx
+import { useState, useEffect, type CSSProperties } from 'react'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { colors } from '@/ui/styles'
 
 type SidebarProps = {
   collapsed: boolean
@@ -9,23 +11,33 @@ type SidebarProps = {
 type NavItemProps = {
   to: string
   label: string
-  icon: ReactNode
+  iconSrc: string
   collapsed: boolean
 }
 
-function NavItem({ to, label, icon, collapsed }: NavItemProps) {
+function NavItem({ to, label, iconSrc, collapsed }: NavItemProps) {
   return (
     <NavLink
       to={to}
       style={({ isActive }) => ({
         ...navItemBase,
         justifyContent: collapsed ? 'center' : 'flex-start',
-        padding: collapsed ? 0 : '0 8px',
-        background: isActive ? '#f3f4f6' : 'transparent',
+        padding: collapsed ? 0 : '0 10px',
+        background: isActive ? colors.emeraldSoft : 'transparent',
+        color: isActive ? colors.emeraldDark : colors.textMain,
       })}
       title={collapsed ? label : undefined}
     >
-      <span style={navIconStyle}>{icon}</span>
+      <img
+        src={iconSrc}
+        alt=""
+        style={{
+          width: 18,
+          height: 18,
+          objectFit: 'contain',
+          flexShrink: 0,
+        }}
+      />
       {!collapsed && <span style={{ fontSize: 14 }}>{label}</span>}
     </NavLink>
   )
@@ -33,78 +45,104 @@ function NavItem({ to, label, icon, collapsed }: NavItemProps) {
 
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const [logoHover, setLogoHover] = useState(false)
-  const width = collapsed ? 44 : 260
+  const width = collapsed ? 52 : 270
+  const navigate = useNavigate()
+
+  // reset hover whenever sidebar opens/closes
+  useEffect(() => {
+    setLogoHover(false)
+  }, [collapsed])
 
   return (
     <aside
       style={{
         width,
-        borderRight: '1px solid rgba(15,23,42,0.08)', // thin line FOR top nav
-        background: '#ffffff',
-        padding: collapsed ? '8px 4px' : '16px 14px',
+        borderRight: `1px solid ${colors.borderSubtle}`,
+        background: colors.white,
+        padding: collapsed ? '6px 6px' : '6px 14px 10px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
         height: '100vh',
         boxSizing: 'border-box',
         transition: 'width 0.2s ease',
-        color: '#111827',
+        color: colors.textMain,
       }}
     >
       {/* TOP SECTION */}
       <div>
         {collapsed ? (
-          // COLLAPSED: LLM box; hover arrow; click expand
+          // COLLAPSED: short logo button
           <button
             type="button"
             onClick={onToggle}
             onMouseEnter={() => setLogoHover(true)}
             onMouseLeave={() => setLogoHover(false)}
-            style={collapsedLogoButton}
+            style={{
+              ...collapsedLogoButton,
+              position: 'relative',
+              overflow: 'hidden',
+            }}
             title="Expand sidebar"
           >
-            {logoHover ? (
-              <span style={{ fontSize: 14, lineHeight: 1 }}>›</span>
-            ) : (
-              <span style={collapsedLogoText}>LLM</span>
+            {/* short logo */}
+            <img
+              src="/shortlogo.jpeg"
+              alt="LLM Area"
+              style={{
+                width: 40,
+                height: 40,
+                objectFit: 'contain',
+                display: logoHover ? 'none' : 'block',
+              }}
+            />
+
+            {/* hover arrow */}
+            {logoHover && (
+              <span style={{ fontSize: 20, lineHeight: 1 }}>›</span>
             )}
           </button>
         ) : (
-          // EXPANDED: logo + round collapse button
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: 24,
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'flex-end',
-                gap: 8,
-              }}
-            >
-              <span style={logoBox}>LLM</span>
-              <span
-                style={{
-                  fontSize: 24,
-                  fontWeight: 700,
-                }}
+          // EXPANDED: long logo (click -> feed) + collapse chevron
+          <div style={{ marginBottom: 14 }}>
+            <div style={logoRow}>
+              {/* logo click area -> go to Explore feed */}
+              <button
+                type="button"
+                onClick={() => navigate('/')}
+                style={logoClickButton}
+                title="Go to Explore feed"
               >
-                Area
-              </span>
-            </div>
+                <img
+                  src="/logo.jpeg"
+                  alt="LLM Area"
+                  style={{
+                    height: 25,
+                    maxWidth: '100%',
+                    width: 'auto',
+                    objectFit: 'contain',
+                    display: 'block',
+                  }}
+                />
+              </button>
 
-            <button
-              type="button"
-              onClick={onToggle}
-              title="Collapse sidebar"
-              style={toggleButtonStyle}
-            >
-              ‹
-            </button>
+              {/* collapse chevron */}
+              <button
+                type="button"
+                onClick={onToggle}
+                style={collapseButton}
+                title="Collapse sidebar"
+              >
+                <span
+                  style={{
+                    fontSize: 20,
+                    lineHeight: 1,
+                  }}
+                >
+                  ‹
+                </span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -114,27 +152,26 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             display: 'flex',
             flexDirection: 'column',
             gap: 6,
-            marginTop: collapsed ? 16 : 0,
+            marginTop: collapsed ? 12 : 4,
           }}
         >
           <NavItem
             to="/aichat"
             label="New Chat"
             collapsed={collapsed}
-            icon={<span style={{ fontSize: 16 }}>✏︎</span>}
+            iconSrc="/newchat.jpeg"
           />
           <NavItem
             to="/"
-            label="LLM Explore Feed"
+            label="Explore Feed"
             collapsed={collapsed}
-            icon={<span style={{ fontSize: 16 }}>▦</span>}
+            iconSrc="/feed.jpeg"
           />
           <NavItem
             to="/advisor"
-            label="Advisor"
+            label="Recommend"
             collapsed={collapsed}
-            // black star icon
-            icon={<span style={{ fontSize: 16 }}>★</span>}
+            iconSrc="/advisor.jpeg"
           />
         </nav>
       </div>
@@ -144,7 +181,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <div
           style={{
             fontSize: 12,
-            color: '#4b5563',
+            color: colors.textMuted,
             display: 'flex',
             flexDirection: 'column',
             gap: 6,
@@ -161,75 +198,65 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   )
 }
 
-/* ---------- shared styles ---------- */
+/* ---------- styles ---------- */
 
-const logoBox: CSSProperties = {
-  border: '1px solid #111',
-  padding: '0 4px',
-  fontSize: 9,
-  letterSpacing: 1,
-  fontWeight: 700,
-  borderRadius: 3,
+const logoRow: CSSProperties = {
+  width: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '0 10px', // align with nav items
 }
 
-const toggleButtonStyle: CSSProperties = {
-  width: 32,
-  height: 32,
-  borderRadius: 999,
-  border: '1px solid #d1d5db',
-  background: '#ffffff',
+const logoClickButton: CSSProperties = {
+  border: 'none',
+  background: 'transparent',
+  padding: 0,
+  margin: 0,
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+}
+
+const collapseButton: CSSProperties = {
+  border: 'none',
+  background: 'transparent',
+  padding: 0,
+  margin: 0,
   cursor: 'pointer',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  fontSize: 16,
-  color: '#111827',
 }
 
-/* collapsed logo button (LLM ↔ arrow) */
+/* collapsed logo button */
 const collapsedLogoButton: CSSProperties = {
-  width: 28,
-  height: 28,
-  borderRadius: 4,
-  border: '1px solid #111827',
-  background: '#ffffff',
+  width: 40,
+  height: 40,
+  borderRadius: 0,
+  border: 'none',
+  background: 'transparent',
   cursor: 'pointer',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  margin: '4px auto 12px',
-}
-
-const collapsedLogoText: CSSProperties = {
-  fontSize: 9,
-  letterSpacing: 1,
-  fontWeight: 700,
+  margin: '0 auto 16px',
 }
 
 /* nav items */
-
 const navItemBase: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: 8,
+  gap: 10,
   borderRadius: 999,
-  height: 32,
+  height: 36,
   textDecoration: 'none',
-  color: '#111827',
+  color: colors.textMain,
   cursor: 'pointer',
-  transition: 'background 0.12s ease',
-}
-
-const navIconStyle: CSSProperties = {
-  width: 20,
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  color: '#111827',
+  transition: 'background 0.12s ease, color 0.12s ease',
 }
 
 /* footer buttons */
-
 const secondaryItemStyle: CSSProperties = {
   border: 'none',
   background: 'transparent',
@@ -237,5 +264,5 @@ const secondaryItemStyle: CSSProperties = {
   fontSize: 12,
   padding: 0,
   cursor: 'pointer',
-  color: '#4b5563',
+  color: colors.textMuted,
 }

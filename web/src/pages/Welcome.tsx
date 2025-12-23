@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { pageShell, card, primaryButton } from '@/ui/styles';
+import { pageShell, card, primaryButton, secondaryButton, colors } from '@/ui/styles';
 import { useAuth } from '@/features/auth/AuthContext';
 import type { CSSProperties } from 'react';
 
@@ -28,7 +28,7 @@ export default function WelcomePage() {
             style={secondaryButtonStyle}
             onClick={() => navigate('/')}
           >
-            Browse LLMExplore
+            Browse Explore
           </button>
         </div>
       </div>
@@ -51,13 +51,13 @@ const titleStyle: CSSProperties = {
   margin: 0,
   fontSize: 24,
   fontWeight: 700,
-  color: '#0f172a',
+  color: colors.textMain,
 };
 
 const textStyle: CSSProperties = {
   marginTop: 10,
   fontSize: 14,
-  color: '#475569',
+  color: colors.textMuted,
 };
 
 const primaryButtonStyle: CSSProperties = {
@@ -65,11 +65,5 @@ const primaryButtonStyle: CSSProperties = {
 };
 
 const secondaryButtonStyle: CSSProperties = {
-  padding: '10px 12px',
-  borderRadius: 8,
-  border: '1px solid #cbd5e1',
-  background: '#f8fafc',
-  color: '#0f172a',
-  cursor: 'pointer',
-  fontSize: 14,
+  ...secondaryButton,
 };

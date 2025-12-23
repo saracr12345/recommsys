@@ -1,3 +1,4 @@
+/* src/index.css */
 :root {
   color-scheme: light;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
@@ -5,31 +6,11 @@
 
 body {
   margin: 0;
-  background: #ffffff;
-  color: #0f172a;
+  background: #f3f7f5; /* matches colors.bg */
+  color: #022c22;      /* matches colors.textMain */
 }
 
-/* stopING global button styling from changing THE sidebar */
-button {
-  font: inherit;
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0 }
-  100% { background-position: 200% 0 }
-}
-:root {
-  color-scheme: light;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-}
-
-body {
-  margin: 0;
-  background: #ffffff;
-  color: #0f172a;
-}
-
-/* stopING global button styling from changing THE sidebar */
+/* stop global button styling from changing the sidebar */
 button {
   font: inherit;
 }

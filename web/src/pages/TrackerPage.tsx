@@ -1,3 +1,4 @@
+// web/src/pages/TrackerPage.tsx
 import {
   useEffect,
   useMemo,
@@ -6,14 +7,30 @@ import {
   type CSSProperties,
 } from 'react'
 
+/* ---------- design tokens ---------- */
+
+const colors = {
+  pageBg: '#f3faf7',
+  cardBg: '#ffffff',
+  cardBorder: '#d4e9e2',
+  cardShadow: '0 10px 30px rgba(0,103,79,0.12)',
+  textMain: '#022c22',
+  textMuted: '#4b5563',
+  accentEmerald: '#00674F',
+  accentEmeraldSoft: '#e0f2f0',
+  accentBlue: '#89cff0',
+}
+
+/* ---------- base layout styles ---------- */
+
 const styles: Record<string, CSSProperties> = {
   page: {
     fontFamily:
       'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
     padding: 16,
     paddingTop: 0,
-    color: '#0f172a',
-    background: '#f8fafc',
+    color: colors.textMain,
+    background: colors.pageBg,
   },
   header: {
     display: 'flex',
@@ -21,33 +38,35 @@ const styles: Record<string, CSSProperties> = {
     alignItems: 'center',
     gap: 12,
     marginBottom: 16,
-  },
-  grid: { display: 'grid', gridTemplateColumns: '300px 1fr', gap: 16 },
-
-  // sticky + scrollable left column
-  sidebarWrapper: {
     position: 'sticky',
-    top: 120,
-    maxHeight: 'calc(100vh - 130px)', // room for top text
-    overflowY: 'auto',
-    paddingRight: 4, // avoid scrollbar over content
+    top: 0,
+    zIndex: 5,
+    background: colors.pageBg,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: '300px 1fr',
+    gap: 16,
+    alignItems: 'start', // same top baseline
   },
 
   sidebar: { display: 'grid', gap: 12, alignContent: 'start' },
 
   card: {
-    background: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: 14,
+    background: colors.cardBg,
+    border: `1px solid ${colors.cardBorder}`,
+    borderRadius: 18,
     padding: 14,
-    boxShadow: '0 8px 24px rgba(15,23,42,0.06)',
+    boxShadow: colors.cardShadow,
   },
   cardTitle: {
     margin: 0,
     marginBottom: 8,
     fontSize: 14,
     fontWeight: 700,
-    color: '#0f172a',
+    color: colors.textMain,
   },
   label: {
     display: 'block',
@@ -62,32 +81,38 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: 8,
     outline: 'none',
     boxSizing: 'border-box',
+    background: '#f9fafb',
   },
   button: {
     padding: '8px 12px',
-    borderRadius: 8,
-    border: '1px solid #cbd5e1',
-    background: '#f8fafc',
+    borderRadius: 999,
+    border: `1px solid ${colors.cardBorder}`,
+    background: colors.accentEmeraldSoft,
     cursor: 'pointer',
+    fontSize: 13,
   },
   buttonPrimary: {
-    padding: '8px 12px',
-    borderRadius: 8,
-    border: '1px solid #1d4ed8',
-    background: '#1d4ed8',
-    color: 'white',
+    padding: '8px 16px',
+    borderRadius: 999,
+    border: 'none',
+    background: colors.accentEmerald,
+    color: '#ffffff',
     cursor: 'pointer',
+    fontSize: 13,
+    fontWeight: 600,
+    boxShadow: '0 8px 20px rgba(0,103,79,0.35)',
   },
   textButton: {
     padding: 0,
     border: 'none',
     background: 'transparent',
-    color: '#1d4ed8',
+    color: colors.accentEmerald,
     cursor: 'pointer',
+    fontSize: 12,
   },
   pill: {
     fontSize: 12,
-    padding: '6px 8px',
+    padding: '6px 10px',
     background: '#f1f5f9',
     border: '1px solid #e2e8f0',
     borderRadius: 999,
@@ -95,21 +120,68 @@ const styles: Record<string, CSSProperties> = {
   },
   feedGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 },
   info: {
-    background: '#eff6ff',
-    border: '1px solid #bfdbfe',
-    color: '#1e40af',
+    background: '#ecfeff',
+    border: '1px solid #bae6fd',
+    color: '#075985',
     padding: 10,
-    borderRadius: 8,
+    borderRadius: 10,
+    fontSize: 12,
   },
   error: {
     background: '#fef2f2',
     border: '1px solid #fecaca',
     color: '#b91c1c',
     padding: 10,
-    borderRadius: 8,
+    borderRadius: 10,
     marginBottom: 12,
+    fontSize: 13,
   },
 }
+
+/* ---------- feed card styles  ---------- */
+
+const feedCardStyle: CSSProperties = {
+  ...styles.card,
+  minHeight: 190,
+  maxHeight: 190,
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'space-between',
+  overflow: 'hidden',
+  borderRadius: 20,
+  boxShadow: '0 10px 30px rgba(15,23,42,0.12)',
+}
+
+const feedTitleRow: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  gap: 8,
+  alignItems: 'flex-start',
+}
+
+const feedTitleText: CSSProperties = {
+  fontWeight: 600,
+  fontSize: 14,
+}
+
+const feedMetaText: CSSProperties = {
+  marginTop: 4,
+  fontSize: 12,
+  color: colors.textMuted,
+}
+
+const feedSummaryText: CSSProperties = {
+  marginTop: 8,
+  fontSize: 13,
+  color: colors.textMain,
+  display: '-webkit-box',
+  WebkitLineClamp: 3,
+  WebkitBoxOrient: 'vertical',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+}
+
+/* ---------- localStorage + helpers ---------- */
 
 const STORAGE_KEYS = {
   KEYWORDS: 'llmtech.keywords.v1',
@@ -174,8 +246,10 @@ function useDebounced<T>(value: T, delay = 300) {
   return v
 }
 
+/* ---------- main page ---------- */
+
 export default function TrackerPage() {
-  // Feeds now come from backend '/feeds'
+  // Feeds come from backend '/feeds'
   const [keywords, setKeywords] = useState(() =>
     loadLocal(STORAGE_KEYS.KEYWORDS, defaultKeywords),
   )
@@ -207,10 +281,34 @@ export default function TrackerPage() {
   >([])
   const lastRefreshedRef = useRef<Date | null>(null)
 
+  //  measure header height so sidebar sticky offset never jumps
+  const headerRef = useRef<HTMLElement | null>(null)
+  const [headerH, setHeaderH] = useState(0)
+
   useEffect(() => saveLocal(STORAGE_KEYS.KEYWORDS, keywords), [keywords])
   useEffect(() => saveLocal(STORAGE_KEYS.READ, readIds), [readIds])
   useEffect(() => saveLocal(STORAGE_KEYS.FAV, favIds), [favIds])
   useEffect(() => saveLocal(STORAGE_KEYS.PREFS, prefs), [prefs])
+
+  useEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+
+    const measure = () => {
+      const h = Math.ceil(el.getBoundingClientRect().height)
+      setHeaderH(h)
+    }
+
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    window.addEventListener('resize', measure)
+
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [])
 
   async function refreshFeeds() {
     setLoading(true)
@@ -237,6 +335,7 @@ export default function TrackerPage() {
 
   useEffect(() => {
     refreshFeeds()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // initial load
 
   // Finance trend detection...
@@ -387,22 +486,26 @@ export default function TrackerPage() {
     ? lastRefreshedRef.current.toLocaleString()
     : ''
 
+  // Sidebar sticky offset derived from header height
+  const sidebarTop = Math.max(12, headerH + 16)
+  const sidebarMaxH = `calc(100vh - ${sidebarTop + 12}px)`
+
+  const sidebarWrapperStyle: CSSProperties = {
+    position: 'sticky',
+    top: sidebarTop,
+    maxHeight: sidebarMaxH,
+    overflowY: 'auto',
+    paddingRight: 4,
+  }
+
   return (
     <div style={styles.page}>
-      <header
-        style={{
-          ...styles.header,
-          position: 'sticky',
-          top: 0,
-          zIndex: 5,
-          background: '#f8fafc',
-        }}
-      >
+      <header ref={headerRef as any} style={styles.header}>
         <div>
           <h1 style={{ margin: 0, fontSize: 22 }}>
             Track And Explore Cutting-Edge LLM Research
           </h1>
-          <p style={{ color: '#475569', marginTop: 6 }}>
+          <p style={{ color: '#475569', marginTop: 6, marginBottom: 0 }}>
             Stay informed on the latest breakthroughs in AI and LLMs, tailored
             to your keywords and interests. Need task-specific guidance? Our AI
             chat provides personalized LLM suggestions to support you.
@@ -424,11 +527,7 @@ export default function TrackerPage() {
 
       <div style={styles.grid}>
         {/* LEFT – filters/keywords/sources */}
-        <aside
-          style={{
-            ...styles.sidebarWrapper,
-          }}
-        >
+        <aside style={sidebarWrapperStyle}>
           <div style={styles.sidebar}>
             {/* Filters */}
             <section style={styles.card}>
@@ -468,8 +567,8 @@ export default function TrackerPage() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: 6,
-                      fontSize: 14,
-                      color: '#0f172a',
+                      fontSize: 13,
+                      color: colors.textMain,
                     }}
                   >
                     <input
@@ -491,8 +590,8 @@ export default function TrackerPage() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: 6,
-                      fontSize: 14,
-                      color: '#0f172a',
+                      fontSize: 13,
+                      color: colors.textMain,
                     }}
                   >
                     <input
@@ -514,8 +613,8 @@ export default function TrackerPage() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: 6,
-                      fontSize: 14,
-                      color: '#0f172a',
+                      fontSize: 13,
+                      color: colors.textMain,
                     }}
                   >
                     <input
@@ -576,7 +675,7 @@ export default function TrackerPage() {
                 </button>
                 {!!activeKws.length && (
                   <button onClick={clearActiveKws} style={styles.button}>
-                    Clear selection
+                    Clear
                   </button>
                 )}
               </div>
@@ -597,8 +696,12 @@ export default function TrackerPage() {
                       key={k}
                       style={{
                         ...styles.pill,
-                        background: selected ? '#e0e7ff' : '#f1f5f9',
-                        borderColor: selected ? '#93c5fd' : '#e2e8f0',
+                        background: selected
+                          ? colors.accentEmeraldSoft
+                          : '#f1f5f9',
+                        borderColor: selected
+                          ? colors.accentEmerald
+                          : '#e2e8f0',
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 6,
@@ -610,7 +713,8 @@ export default function TrackerPage() {
                           border: 'none',
                           background: 'transparent',
                           cursor: 'pointer',
-                          color: '#0f172a',
+                          color: colors.textMain,
+                          fontSize: 12,
                         }}
                       >
                         {k}
@@ -626,6 +730,7 @@ export default function TrackerPage() {
                           background: 'transparent',
                           cursor: 'pointer',
                           color: '#64748b',
+                          fontSize: 12,
                         }}
                       >
                         ×
@@ -657,14 +762,14 @@ export default function TrackerPage() {
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr',
                 gap: 12,
+                marginTop: 0,
               }}
             >
               {Array.from({ length: 4 }).map((_, i) => (
                 <div
                   key={i}
                   style={{
-                    ...styles.card,
-                    height: 180,
+                    ...feedCardStyle,
                     background:
                       'linear-gradient(90deg,#f3f4f6 20%, #e5e7eb 40%, #f3f4f6 60%)',
                     backgroundSize: '200% 100%',
@@ -688,12 +793,7 @@ export default function TrackerPage() {
           {!!financeTrends.length && (
             <div style={{ marginTop: 16 }}>
               <div style={styles.card}>
-                <h3
-                  style={{
-                    ...styles.cardTitle,
-                    marginBottom: 12,
-                  }}
-                >
+                <h3 style={{ ...styles.cardTitle, marginBottom: 12 }}>
                   Finance trends (7d vs prior 7d)
                 </h3>
                 <div
@@ -708,34 +808,29 @@ export default function TrackerPage() {
                     <div
                       key={t.term}
                       style={{
-                        border: '1px solid #e5e7eb',
-                        borderRadius: 10,
+                        border: `1px solid ${colors.cardBorder}`,
+                        borderRadius: 14,
                         padding: 8,
-                        background: '#fff',
+                        background: colors.cardBg,
                       }}
                     >
                       <div
                         style={{
                           fontWeight: 600,
                           textTransform: 'capitalize',
+                          fontSize: 13,
                         }}
                       >
                         {t.term}
                       </div>
-                      <div
-                        style={{
-                          fontSize: 12,
-                          color: '#64748b',
-                        }}
-                      >
+                      <div style={{ fontSize: 12, color: '#64748b' }}>
                         Now {t.now} • Prev {t.prev}
                       </div>
                       <div
                         style={{
                           marginTop: 4,
                           fontSize: 12,
-                          color:
-                            t.change >= 0 ? '#16a34a' : '#b91c1c',
+                          color: t.change >= 0 ? '#16a34a' : '#b91c1c',
                         }}
                       >
                         {t.change >= 0 ? '+' : ''}
@@ -752,6 +847,8 @@ export default function TrackerPage() {
     </div>
   )
 }
+
+/* ---------- helpers for feed list ---------- */
 
 function stripHtml(html: string) {
   const div = document.createElement('div')
@@ -839,9 +936,7 @@ function FeedList({
   if (!items || !items.length) {
     return (
       <div style={styles.card}>
-        <div style={{ color: '#475569' }}>
-          No items yet. Try Refresh.
-        </div>
+        <div style={{ color: colors.textMuted }}>No items yet. Try Refresh.</div>
       </div>
     )
   }
@@ -852,42 +947,29 @@ function FeedList({
       style={{
         ...styles.feedGrid,
         gridTemplateColumns: cols === 1 ? '1fr' : '1fr 1fr',
+        alignItems: 'stretch',
+        marginTop: 0,
       }}
     >
       {items.map((e: any) => (
         <div
           key={e.id}
           style={{
-            ...styles.card,
+            ...feedCardStyle,
             opacity: readIds[e.id] ? 0.85 : 1,
           }}
         >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              gap: 8,
-            }}
-          >
+          <div style={feedTitleRow}>
             <div
               style={{
-                fontWeight: 600,
-                color: readIds[e.id] ? '#1d4ed8' : '#0f172a',
+                ...feedTitleText,
+                color: readIds[e.id] ? colors.accentEmerald : colors.textMain,
               }}
             >
               {highlightKeywords(e.title, kwLower)}
             </div>
-            <div
-              style={{
-                display: 'flex',
-                gap: 8,
-                alignItems: 'center',
-              }}
-            >
-              <button
-                onClick={() => toggleRead(e.id)}
-                style={styles.textButton}
-              >
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button onClick={() => toggleRead(e.id)} style={styles.textButton}>
                 {readIds[e.id] ? 'Unread' : 'Read'}
               </button>
               <a
@@ -907,13 +989,8 @@ function FeedList({
               </button>
             </div>
           </div>
-          <div
-            style={{
-              marginTop: 4,
-              fontSize: 12,
-              color: '#64748b',
-            }}
-          >
+
+          <div style={feedMetaText}>
             <span>{e.source}</span>
             <span> • </span>
             <span>{timeSince(e.date)}</span>
@@ -924,13 +1001,9 @@ function FeedList({
               </>
             )}
           </div>
+
           {showSummaries && e.summary && (
-            <div
-              style={{
-                marginTop: 8,
-                color: '#0f172a',
-              }}
-            >
+            <div style={feedSummaryText}>
               {highlightKeywords(stripHtml(e.summary), kwLower)}
             </div>
           )}

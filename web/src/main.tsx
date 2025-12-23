@@ -10,7 +10,7 @@ import TopNav from './features/layout/TopNav';
 import Sidebar from './features/layout/Sidebar';
 import AIChat from './pages/AIChat';
 import Welcome from './pages/Welcome';
-import Dashboard from './pages/Dashboard'; 
+import Dashboard from './pages/Dashboard';
 import { AuthProvider } from './features/auth/AuthContext';
 
 // Lazy-load the advisor app
@@ -37,7 +37,9 @@ function Shell() {
           minWidth: 0,
         }}
       >
-        <TopNav />
+        {/* PASS STATE INTO TOPNAV HERE */}
+        <TopNav sidebarCollapsed={sidebarCollapsed} />
+
         <div style={{ flex: 1, overflow: 'auto' }}>
           <Suspense fallback={<div style={{ padding: 16 }}>Loading…</div>}>
             <Routes>
