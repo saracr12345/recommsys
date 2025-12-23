@@ -1,7 +1,10 @@
 {
   "name": "recommsys",
   "private": true,
-  "workspaces": ["shared", "worker", "web"
+  "workspaces": [
+    "shared",
+    "worker",
+    "web"
   ],
   "scripts": {
     "dev:web": "npm --workspace web run dev",
@@ -11,7 +14,8 @@
   "devDependencies": {
     "@types/react-router-dom": "^5.3.3",
     "concurrently": "^9.0.0",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",

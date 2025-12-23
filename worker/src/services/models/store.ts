@@ -39,6 +39,12 @@ function fromDb(row: ModelProfile): LlmModelProfile {
 
     source: row.source ?? undefined,
     url: row.url ?? undefined,
+    pros: jsonToStringArray(row.pros),
+    cons: jsonToStringArray(row.cons),
+    ragTips: jsonToStringArray(row.ragTips),
+    typicalUseCases: jsonToStringArray(row.typicalUseCases),
+    strengths: jsonToStringArray(row.strengths),
+    limitations: jsonToStringArray(row.limitations),
   };
 }
 

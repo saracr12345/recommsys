@@ -8,21 +8,21 @@ datasource db {
 }
 
 model User {
-  id        Int                   @id @default(autoincrement())
-  email     String                @unique
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
   password  String
-  createdAt DateTime              @default(now())
+  createdAt DateTime @default(now())
 
-  threads   ChatThread[]
-  events    RecommendationEvent[]
+  threads              ChatThread[]
+  events               RecommendationEvent[]
   savedRecommendations SavedRecommendation[]
 }
 
 model ModelProfile {
-  id              String   @id
-  name            String
-  provider        String?
-  family          String?
+  id       String  @id
+  name     String
+  provider String?
+  family   String?
 
   contextWindow   Int?
   latencyMs       Int?
@@ -30,32 +30,40 @@ model ModelProfile {
   apiType         String?
 
   // stored as JSON array of strings
-  domainTags      Json     @default("[]")
+  domainTags Json @default("[]")
 
-  modality        String?  // NEW
-  license         String?  // NEW
+  modality String?
+  license  String?
 
-  source          String?
-  url             String?
+  // NEW: model card fields (JSON arrays)
+  pros            Json @default("[]")
+  cons            Json @default("[]")
+  ragTips         Json @default("[]")
+  typicalUseCases Json @default("[]")
+  strengths       Json @default("[]")
+  limitations     Json @default("[]")
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  source String?
+  url    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model RecommendationEvent {
-  id         Int      @id @default(autoincrement())
-  createdAt  DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
 
-  task       String
-  privacy    String
-  latency    Int
-  context    Int
+  task    String
+  privacy String
+  latency Int
+  context Int
 
-  results    Json
+  results Json
 
-  userId     Int?
-  user       User?    @relation(fields: [userId], references: [id])
-  savedBy    SavedRecommendation[]
+  userId  Int?
+  user    User?                 @relation(fields: [userId], references: [id])
+  savedBy SavedRecommendation[]
 }
 
 model ChatThread {
@@ -63,39 +71,39 @@ model ChatThread {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  title     String?
+  title String?
 
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 
-  messages  ChatMessage[]
+  messages ChatMessage[]
 }
 
 model ChatMessage {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
 
-  role      String   // "user" | "assistant" | "system"
-  content   String
-  model     String?
+  role    String // "user" | "assistant" | "system"
+  content String
+  model   String?
 
-  threadId  Int
-  thread    ChatThread @relation(fields: [threadId], references: [id])
+  threadId Int
+  thread   ChatThread @relation(fields: [threadId], references: [id])
 }
 
 model SavedRecommendation {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
 
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 
-  eventId   Int
-  event     RecommendationEvent @relation(fields: [eventId], references: [id])
+  eventId Int
+  event   RecommendationEvent @relation(fields: [eventId], references: [id])
 
-  note      String?
+  note String?
 
-  archived  Boolean  @default(false)
+  archived Boolean @default(false)
 
   @@unique([userId, eventId])
 }

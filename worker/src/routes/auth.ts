@@ -11,7 +11,6 @@ import {
 } from '../middleware/auth.js';
 
 const router = Router();
-
 // Strong Argon2id parameters
 const ARGON2_OPTS: argon2.Options = {
   type: argon2.argon2id,

@@ -3,6 +3,10 @@ import { prisma } from '../prisma.js';
 
 const router = Router();
 
+function jsonArrayToStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.map(String) : [];
+}
+
 function clamp01(x: number) {
   return Math.max(0, Math.min(1, x));
 }
@@ -21,32 +25,33 @@ router.post('/', async (req, res) => {
 
     const results = models
       .map((m) => {
-        const tags: string[] = Array.isArray(m.domainTags)
-          ? (m.domainTags as any)
-          : [];
+        // domainTags is Prisma Json -> normalize to string[]
+        const tags = jsonArrayToStringArray(m.domainTags);
 
         const privacyMatch =
           privacy === 'Any'
             ? 1
             : needSelfHost
-            ? m.apiType === 'self-hosted' || m.apiType === 'open-source'
-              ? 1
-              : 0
-            : m.apiType === 'saas'
-            ? 1
-            : 0;
+              ? m.apiType === 'self-hosted' || m.apiType === 'open-source'
+                ? 1
+                : 0
+              : m.apiType === 'saas'
+                ? 1
+                : 0;
 
         const ctxScore = clamp01(
           ((m.contextWindow ?? 0) - minCtx) / (minCtx || 1),
         );
+
         const latScore = clamp01(
           1 -
             ((m.latencyMs ?? targetLatency * 2) - targetLatency) /
               targetLatency,
         );
+
         const costScore = 1 / ((m.costPer1kTokens ?? 0.5) + 0.01);
-        const domainScore =
-          isFinance && tags.includes('finance') ? 0.5 : 0;
+
+        const domainScore = isFinance && tags.includes('finance') ? 0.5 : 0;
 
         const score =
           2 * privacyMatch +
@@ -69,6 +74,11 @@ router.post('/', async (req, res) => {
         if (latScore > 0) why.push('Meets latency target');
         if (domainScore > 0) why.push('Relevant to finance tasks');
 
+        // Json fields -> normalize
+        const pros = jsonArrayToStringArray(m.pros);
+        const cons = jsonArrayToStringArray(m.cons);
+        const ragTips = jsonArrayToStringArray(m.ragTips);
+
         return {
           model: {
             name: m.name,
@@ -77,6 +87,10 @@ router.post('/', async (req, res) => {
             latencyMs: m.latencyMs ?? 0,
             costPer1kTokens: m.costPer1kTokens ?? 0,
             tags,
+            pros,
+            cons,
+            ragTip: ragTips[0] ?? '',
+            sources: m.url ? [m.url] : [],
           },
           score,
           factors,
@@ -99,6 +113,7 @@ router.post('/', async (req, res) => {
       const margin = secondResult
         ? topResult.score - secondResult.score
         : topResult.score;
+
       if (margin > 1.0) confidence += 0.15;
 
       confidence = clamp01(confidence);
@@ -114,7 +129,7 @@ router.post('/', async (req, res) => {
         latency: Number(latency) || 0,
         context: Number(context) || 0,
         results: results.slice(0, 5) as any,
-        userId: req.userId ?? null,
+        userId: (req as any).userId ?? null,
       },
     });
 
