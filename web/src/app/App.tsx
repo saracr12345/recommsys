@@ -1,5 +1,4 @@
-// src/app/App.tsx
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { pageShell, card, input, primaryButton, colors } from '@/ui/styles';
 import { api } from '@/lib/api';
 
@@ -11,6 +10,8 @@ type AdvisorModel = {
   latencyMs: number;
   costPer1kTokens: number;
   tags: string[];
+  cons?: string;
+  pros?: string;
 };
 
 type AdvisorFactors = {
@@ -27,11 +28,21 @@ type AdvisorResult = {
   confidence?: number;
   factors?: AdvisorFactors;
   why?: string[];
+  ragTip?: string;
+  sources?: string[] | string;
+  pros?: string;
+  cons?: string;
 };
 
 type RecommendResponse = {
   ok: boolean;
+  eventId: number;
   results: AdvisorResult[];
+};
+
+type SavedListResponse = {
+  ok: boolean;
+  items: { id: number }[];
 };
 
 export default function App() {
@@ -43,10 +54,32 @@ export default function App() {
   const [results, setResults] = useState<AdvisorResult[]>([]);
   const [error, setError] = useState<string>('');
 
+  // new: current recommendation event id + save state
+  const [eventId, setEventId] = useState<number | null>(null);
+  const [runSaved, setRunSaved] = useState(false);
+  const [savedCount, setSavedCount] = useState(0);
+
+  // load total saved dashboards count once
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await api<SavedListResponse>('/recommendations/saved', {
+          method: 'GET',
+        });
+        if (data.ok) {
+          setSavedCount(data.items?.length ?? 0);
+        }
+      } catch {
+      }
+    })();
+  }, []);
+
   async function recommend() {
     setLoading(true);
     setError('');
     setResults([]);
+    setEventId(null);
+    setRunSaved(false);
 
     try {
       const data = await api<RecommendResponse>('/recommend', {
@@ -65,10 +98,33 @@ export default function App() {
       }
 
       setResults(data.results ?? []);
+      setEventId(data.eventId ?? null);
+      setRunSaved(false); // new run isn't saved yet
     } catch (e: any) {
       setError(e.message || 'Error');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function toggleSaveCurrentRun() {
+    if (!eventId) return;
+
+    try {
+      const data = await api<{ ok: boolean; saved: boolean; savedCount: number }>(
+        '/recommendations/saved',
+        {
+          method: 'POST',
+          body: JSON.stringify({ eventId }),
+        },
+      );
+
+      if (!data.ok) throw new Error('Failed to toggle save');
+
+      setRunSaved(data.saved);
+      setSavedCount(data.savedCount);
+    } catch (e) {
+      console.error('failed to toggle save', e);
     }
   }
 
@@ -79,35 +135,40 @@ export default function App() {
     return 'Low';
   }
 
+  function scorePercent(res: AdvisorResult): number | null {
+    const f = res.factors;
+    if (f) {
+      const avg =
+        (num(f.privacyMatch) +
+          num(f.ctxScore) +
+          num(f.latencyScore) +
+          num(f.costScore) +
+          num(f.domainScore)) /
+        5;
+      return clamp(Math.round(avg * 100), 0, 100);
+    }
+    if (res.confidence != null)
+      return clamp(Math.round(res.confidence * 100), 0, 100);
+
+    if (res.score <= 1.5) return clamp(Math.round(res.score * 100), 0, 100);
+    return clamp(Math.round(res.score), 0, 100);
+  }
+
   return (
     <div style={pageStyle}>
       <div style={cardStyle}>
         <div style={{ marginBottom: 12, textAlign: 'center' }}>
-          <h2
-            style={{
-              margin: 0,
-              fontSize: 22,
-              fontWeight: 700,
-              color: colors.textMain,
-            }}
-          >
-            LLM Advisor
-          </h2>
-          <p
-            style={{
-              marginTop: 6,
-              marginBottom: 0,
-              fontSize: 14,
-              color: colors.textMuted,
-            }}
-          >
+          <h2 style={titleStyle}>LLM Advisor</h2>
+          <p style={subtitleStyle}>
             Input your task → get the best model ranked for you.
           </p>
+          <div style={{ marginTop: 6, fontSize: 12, color: colors.textMuted }}>
+            Saved dashboards: {savedCount}
+          </div>
         </div>
 
         {/* FORM FIELDS */}
         <div style={{ display: 'grid', gap: 12 }}>
-          {/* TASK FIELD */}
           <div style={fieldStyle}>
             <div style={labelStyle}>Task</div>
             <input
@@ -118,7 +179,6 @@ export default function App() {
             />
           </div>
 
-          {/* PRIVACY FIELD */}
           <div style={fieldStyle}>
             <div style={labelStyle}>Privacy</div>
             <select
@@ -132,7 +192,6 @@ export default function App() {
             </select>
           </div>
 
-          {/* LATENCY */}
           <div style={fieldStyle}>
             <div style={labelStyle}>Latency target (ms)</div>
             <input
@@ -143,7 +202,6 @@ export default function App() {
             />
           </div>
 
-          {/* CONTEXT */}
           <div style={fieldStyle}>
             <div style={labelStyle}>Context tokens needed</div>
             <input
@@ -155,16 +213,13 @@ export default function App() {
           </div>
         </div>
 
-        {/* BUTTON */}
         <button onClick={recommend} disabled={loading} style={buttonStyle}>
           {loading ? 'Thinking…' : 'Recommend'}
         </button>
 
-        {/* ERROR */}
         {error && <div style={errorStyle}>{error}</div>}
 
-        {/* RESULTS */}
-        <div style={{ marginTop: 16, display: 'grid', gap: 10 }}>
+        <div style={{ marginTop: 16, display: 'grid', gap: 14 }}>
           {results.length === 0 && !loading && (
             <div style={helperTextStyle}>
               Run a recommendation to see ranked models here.
@@ -172,107 +227,136 @@ export default function App() {
           )}
 
           {results.map((res, i) => {
-            const isTop = i === 0 && res.confidence != null;
-            const label = confidenceLabel(res.confidence);
+            const pct = scorePercent(res);
+            const model = res.model ?? ({} as AdvisorModel);
+
+            const pros = safe((res as any).pros ?? (model as any).pros ?? '');
+            const cons = safe((res as any).cons ?? (model as any).cons ?? '');
+            const ragTip = safe((res as any).ragTip ?? '');
+            const sourcesRaw = (res as any).sources ?? '';
+            const sources = safe(
+              Array.isArray(sourcesRaw)
+                ? sourcesRaw.join('; ')
+                : String(sourcesRaw || ''),
+            );
+
+            const checks: string[] = [
+              privacy === 'Any' ? '' : 'Matches privacy requirement',
+              model.context != null &&
+              ctx != null &&
+              model.context >= ctx
+                ? 'Satisfies context window'
+                : '',
+              model.latencyMs != null &&
+              latency != null &&
+              model.latencyMs <= latency
+                ? 'Meets latency target'
+                : '',
+            ].filter(Boolean);
+
+            const bullets = Array.from(
+              new Set([...(res.why ?? []), ...checks]),
+            ).filter(Boolean);
+
+            const showSave = i === 0; // only show Save button on top model card
 
             return (
-              <div key={res.model.name} style={resultCardStyle}>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: 4,
-                    gap: 12,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 16,
-                      fontWeight: 600,
-                      color: colors.textMain,
-                    }}
-                  >
-                    #{i + 1} — {res.model.name}
+              <div key={i} style={wordCardStyle}>
+                <div style={wordTopRow}>
+                  <div style={{ display: 'grid', gap: 4 }}>
+                    <div style={wordTitle}>
+                      #{i + 1} — {safe(model.name)}
+                    </div>
+
+                    <div style={wordLine}>
+                      <span style={labelStrong}>Provider:</span>{' '}
+                      {safe(model.provider)}
+                    </div>
+
+                    <div style={wordLine}>
+                      <span style={labelStrong}>Context:</span>{' '}
+                      {model.context != null
+                        ? model.context.toLocaleString()
+                        : ''}{' '}
+                      tokens
+                    </div>
+
+                    <div style={wordLine}>
+                      <span style={labelStrong}>Latency:</span>{' '}
+                      {model.latencyMs != null ? `${model.latencyMs} ms` : ''}
+                    </div>
                   </div>
 
-                  {isTop && (
-                    <span
-                      style={{
-                        fontSize: 11,
-                        padding: '2px 10px',
-                        borderRadius: 999,
-                        border: `1px solid ${colors.blueBorder}`,
-                        background: colors.blueSoft,
-                        color: '#035781',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      Confidence: {res.confidence!.toFixed(2)} ({label})
-                    </span>
-                  )}
+                  <div style={wordRightCol}>
+                    {showSave && (
+                      <button
+                        onClick={() => void toggleSaveCurrentRun()}
+                        title={runSaved ? 'Unsave' : 'Save'}
+                        style={{
+                          ...starButtonStyle,
+                          color: runSaved
+                            ? colors.emeraldDark
+                            : colors.textMuted,
+                        }}
+                        disabled={!eventId}
+                      >
+                        {runSaved ? '★ Saved' : '☆ Save'}
+                      </button>
+                    )}
+
+                    <div style={wordScore}>
+                      <span style={{ opacity: 0.9 }}>Score:</span>{' '}
+                      {pct == null ? '' : `${pct}%`}
+                    </div>
+                  </div>
                 </div>
 
-                <div
-                  style={{
-                    fontSize: 13,
-                    color: colors.textMain,
-                    lineHeight: 1.5,
-                  }}
-                >
-                  Provider: {res.model.provider}
-                  <br />
-                  Context: {res.model.context.toLocaleString()} tokens
-                  <br />
-                  Latency: {res.model.latencyMs} ms
-                  <br />
-                  Cost: ${res.model.costPer1kTokens}/1k tokens
-                  <br />
-                  Tags: {res.model.tags.join(', ') || '–'}
+                <div style={{ marginTop: 10 }}>
+                  <div style={wordLineMuted}>
+                    <span style={labelStrong}>Cost:</span>{' '}
+                    {model.costPer1kTokens != null
+                      ? `$${model.costPer1kTokens}/1k tokens`
+                      : ''}
+                  </div>
                 </div>
 
-                {/* Why explanations */}
-                {res.why && res.why.length > 0 && (
-                  <ul
-                    style={{
-                      marginTop: 6,
-                      marginBottom: 0,
-                      paddingLeft: 18,
-                      fontSize: 12,
-                      color: colors.textMuted,
-                    }}
-                  >
-                    {res.why.map((w) => (
-                      <li key={w}>{w}</li>
-                    ))}
-                  </ul>
-                )}
+                <div style={{ marginTop: 10 }}>
+                  <div style={wordLineMuted}>
+                    <span style={labelStrong}>Pros:</span> {pros}
+                  </div>
+                  <div style={{ height: 6 }} />
+                  <div style={wordLineMuted}>
+                    <span style={labelStrong}>Cons:</span> {cons}
+                  </div>
+                </div>
 
-                {/* Factor breakdown */}
-                {res.factors && (
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 11,
-                      color: colors.textMuted,
-                    }}
-                  >
-                    Cost score: {res.factors.costScore.toFixed(2)} ·{' '}
-                    Latency score: {res.factors.latencyScore.toFixed(2)} ·{' '}
-                    Context score: {res.factors.ctxScore.toFixed(2)}
+                <div style={{ marginTop: 12 }}>
+                  <div style={wordLineMuted}>
+                    <span style={labelStrong}>RAG tip:</span> {ragTip}
+                  </div>
+                  <div style={wordLineMuted}>
+                    <span style={labelStrong}>Sources:</span> {sources}
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 12 }}>
+                  <div style={wordLine}>
+                    <span style={labelStrong}>Tags:</span>{' '}
+                    {model.tags && model.tags.length
+                      ? model.tags.join(', ')
+                      : ''}
+                  </div>
+                </div>
+
+                {bullets.length > 0 && (
+                  <div style={{ marginTop: 10 }}>
+                    <ul style={wordBullets}>
+                      {bullets.map((t) => (
+                        <li key={t}>{t}</li>
+                      ))}
+                    </ul>
                   </div>
                 )}
-
-                <div
-                  style={{
-                    marginTop: 6,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: colors.emeraldDark,
-                  }}
-                >
-                  Score: {res.score.toFixed(2)}
-                </div>
               </div>
             );
           })}
@@ -282,13 +366,30 @@ export default function App() {
   );
 }
 
+/* ---------- helpers ---------- */
+
+function safe(v: any): string {
+  if (v == null) return '';
+  const s = String(v);
+  return s === 'undefined' || s === 'null' ? '' : s;
+}
+
+function num(v: any): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function clamp(n: number, lo: number, hi: number) {
+  return Math.max(lo, Math.min(hi, n));
+}
+
 /* ---------- styles ---------- */
 
 const pageStyle: CSSProperties = { ...pageShell };
 
 const cardStyle: CSSProperties = {
   ...card,
-  width: 560,
+  width: 620,
 };
 
 const inputStyle: CSSProperties = { ...input };
@@ -328,10 +429,88 @@ const helperTextStyle: CSSProperties = {
   color: colors.textMuted,
 };
 
-const resultCardStyle: CSSProperties = {
-  padding: 14,
-  borderRadius: 14,
+const titleStyle: CSSProperties = {
+  margin: 0,
+  fontSize: 22,
+  fontWeight: 700,
+  color: colors.textMain,
+};
+
+const subtitleStyle: CSSProperties = {
+  marginTop: 6,
+  marginBottom: 0,
+  fontSize: 14,
+  color: colors.textMuted,
+};
+
+const wordCardStyle: CSSProperties = {
+  padding: 18,
+  borderRadius: 16,
   background: colors.white,
   border: `1px solid ${colors.borderSubtle}`,
-  boxShadow: '0 4px 14px rgba(0,0,0,0.04)',
+  boxShadow: '0 6px 18px rgba(0,0,0,0.06)',
+};
+
+const wordTopRow: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',
+  gap: 16,
+};
+
+const wordTitle: CSSProperties = {
+  fontSize: 20,
+  fontWeight: 800,
+  color: colors.textMain,
+  lineHeight: 1.15,
+};
+
+const wordLine: CSSProperties = {
+  fontSize: 14,
+  color: colors.textMain,
+  lineHeight: 1.5,
+};
+
+const wordLineMuted: CSSProperties = {
+  fontSize: 14,
+  color: colors.textMuted,
+  lineHeight: 1.55,
+};
+
+const labelStrong: CSSProperties = {
+  fontWeight: 700,
+  color: colors.textMain,
+};
+
+const wordRightCol: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'flex-end',
+  gap: 8,
+  minWidth: 170,
+};
+
+const wordScore: CSSProperties = {
+  fontSize: 16,
+  color: colors.textMain,
+  fontWeight: 600,
+  whiteSpace: 'nowrap',
+};
+
+const wordBullets: CSSProperties = {
+  margin: 0,
+  paddingLeft: 18,
+  fontSize: 13,
+  color: colors.textMuted,
+  lineHeight: 1.6,
+};
+
+const starButtonStyle: CSSProperties = {
+  border: `1px solid ${colors.borderSubtle}`,
+  background: 'transparent',
+  borderRadius: 999,
+  padding: '6px 10px',
+  cursor: 'pointer',
+  fontSize: 12,
+  fontWeight: 600,
 };

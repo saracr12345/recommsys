@@ -1,3 +1,4 @@
+//shared/src/feed.ts 
 export interface RawFeedItem {
     id: string;
     title: string;

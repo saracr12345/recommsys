@@ -12,9 +12,10 @@ model User {
   email     String                @unique
   password  String
   createdAt DateTime              @default(now())
-  threads ChatThread[]
 
+  threads   ChatThread[]
   events    RecommendationEvent[]
+  savedRecommendations SavedRecommendation[]
 }
 
 model ModelProfile {
@@ -41,7 +42,6 @@ model ModelProfile {
   updatedAt       DateTime @updatedAt
 }
 
-
 model RecommendationEvent {
   id         Int      @id @default(autoincrement())
   createdAt  DateTime @default(now())
@@ -55,6 +55,7 @@ model RecommendationEvent {
 
   userId     Int?
   user       User?    @relation(fields: [userId], references: [id])
+  savedBy    SavedRecommendation[]
 }
 
 model ChatThread {
@@ -80,4 +81,21 @@ model ChatMessage {
 
   threadId  Int
   thread    ChatThread @relation(fields: [threadId], references: [id])
+}
+
+model SavedRecommendation {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+
+  eventId   Int
+  event     RecommendationEvent @relation(fields: [eventId], references: [id])
+
+  note      String?
+
+  archived  Boolean  @default(false)
+
+  @@unique([userId, eventId])
 }
