@@ -28,7 +28,7 @@ const models: Array<{
   limitations: string[];
 }> = [
   {
-    id: " ",
+    id: "gpt-4o-mini",
     name: "GPT-4o Mini",
     provider: "OpenAI",
     family: "GPT-4o",

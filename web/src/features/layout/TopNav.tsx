@@ -25,9 +25,7 @@ function TabLink({ to, children }: TabLinkProps) {
       style={({ isActive }) => ({
         ...tabBaseStyle,
         color: isActive ? colors.emeraldDark : colors.textMuted,
-        borderBottom: isActive
-          ? `2px solid ${colors.emerald}`
-          : '2px solid transparent',
+        borderBottom: isActive ? `2px solid ${colors.emerald}` : '2px solid transparent',
         cursor: 'pointer',
         fontWeight: hovered || isActive ? 600 : 500,
       })}
@@ -51,9 +49,7 @@ export default function TopNav({
   const initials = user?.email ? user.email.trim()[0]?.toUpperCase() || 'U' : 'U'
 
   const shortEmail =
-    user?.email && user.email.length > 24
-      ? user.email.slice(0, 24) + '…'
-      : user?.email ?? ''
+    user?.email && user.email.length > 24 ? user.email.slice(0, 24) + '…' : user?.email ?? ''
 
   function handleDashboardClick() {
     setMenuOpen(false)
@@ -131,6 +127,8 @@ export default function TopNav({
                   background: 'transparent',
                   cursor: 'pointer',
                   padding: 0,
+
+                  marginLeft: -255, 
                 }}
                 title={user.email}
               >
@@ -139,8 +137,7 @@ export default function TopNav({
                     width: 30,
                     height: 30,
                     borderRadius: 999,
-                    background:
-                      'linear-gradient(135deg,#00674F,#89cff0)',
+                    background: 'linear-gradient(135deg,#00674F,#89cff0)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',

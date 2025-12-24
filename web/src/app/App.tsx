@@ -1,43 +1,69 @@
+// web/src/pages/Recommend/App.tsx
 import { useEffect, useState, type CSSProperties } from 'react';
 import { pageShell, card, input, primaryButton, colors } from '@/ui/styles';
 import { api } from '@/lib/api';
 
-// ---- types that match the backend /recommend response ----
+const MAX_SCORE = 1; // backend score is now 0..1
+
 type AdvisorModel = {
   name: string;
   provider: string;
   context: number;
-  latencyMs: number;
-  costPer1kTokens: number;
+  latencyMs: number | null;
+  costPer1kTokens: number | null;
   tags: string[];
-  cons?: string;
-  pros?: string;
+  apiType?: string | null;
+  modality?: string | null;
+  pros?: string[];
+  cons?: string[];
+  ragTip?: string;
+  sources?: string[];
 };
 
 type AdvisorFactors = {
-  privacyMatch: number;
   ctxScore: number;
   latencyScore: number;
   costScore: number;
   domainScore: number;
+  unknownPenalty: number;
 };
 
 type AdvisorResult = {
   model: AdvisorModel;
-  score: number;
+  score: number; // 0..1
   confidence?: number;
   factors?: AdvisorFactors;
   why?: string[];
-  ragTip?: string;
-  sources?: string[] | string;
-  pros?: string;
-  cons?: string;
+  warnings?: string[];
+};
+
+type PipelineStep = {
+  role: string;
+  model: AdvisorModel;
+  rationale: string[];
+  suggestedConfig: {
+    temperature: number;
+    maxOutputTokens: number;
+    structuredOutput: boolean;
+    citationsRequired: boolean;
+  };
+  promptHint: string;
+};
+
+type RecommendedPipeline = {
+  label: string;
+  steps: PipelineStep[];
+  notes: string[];
 };
 
 type RecommendResponse = {
   ok: boolean;
-  eventId: number;
-  results: AdvisorResult[];
+  eventId: number | null;
+  results: {
+    singleModels: AdvisorResult[];
+    recommendedPipeline?: RecommendedPipeline | null;
+  };
+  message?: string;
 };
 
 type SavedListResponse = {
@@ -51,10 +77,14 @@ export default function App() {
   const [latency, setLatency] = useState(1200);
   const [ctx, setCtx] = useState(4000);
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<AdvisorResult[]>([]);
-  const [error, setError] = useState<string>('');
 
-  // new: current recommendation event id + save state
+  // new state (replaces "results")
+  const [singleModels, setSingleModels] = useState<AdvisorResult[]>([]);
+  const [pipeline, setPipeline] = useState<RecommendedPipeline | null>(null);
+
+  const [error, setError] = useState<string>('');
+  const [message, setMessage] = useState<string>('');
+
   const [eventId, setEventId] = useState<number | null>(null);
   const [runSaved, setRunSaved] = useState(false);
   const [savedCount, setSavedCount] = useState(0);
@@ -70,6 +100,7 @@ export default function App() {
           setSavedCount(data.items?.length ?? 0);
         }
       } catch {
+        // ignore
       }
     })();
   }, []);
@@ -77,7 +108,12 @@ export default function App() {
   async function recommend() {
     setLoading(true);
     setError('');
-    setResults([]);
+    setMessage('');
+
+    // ✅ clear correct state
+    setSingleModels([]);
+    setPipeline(null);
+
     setEventId(null);
     setRunSaved(false);
 
@@ -97,9 +133,11 @@ export default function App() {
         throw new Error('Recommendation failed');
       }
 
-      setResults(data.results ?? []);
+      setSingleModels(data.results?.singleModels ?? []);
+      setPipeline(data.results?.recommendedPipeline ?? null);
+
       setEventId(data.eventId ?? null);
-      setRunSaved(false); // new run isn't saved yet
+      setMessage(data.message ?? '');
     } catch (e: any) {
       setError(e.message || 'Error');
     } finally {
@@ -111,13 +149,14 @@ export default function App() {
     if (!eventId) return;
 
     try {
-      const data = await api<{ ok: boolean; saved: boolean; savedCount: number }>(
-        '/recommendations/saved',
-        {
-          method: 'POST',
-          body: JSON.stringify({ eventId }),
-        },
-      );
+      const data = await api<{
+        ok: boolean;
+        saved: boolean;
+        savedCount: number;
+      }>('/recommendations/saved', {
+        method: 'POST',
+        body: JSON.stringify({ eventId }),
+      });
 
       if (!data.ok) throw new Error('Failed to toggle save');
 
@@ -135,23 +174,19 @@ export default function App() {
     return 'Low';
   }
 
+  // map backend score (0–1) -> percentage (0–100)
   function scorePercent(res: AdvisorResult): number | null {
-    const f = res.factors;
-    if (f) {
-      const avg =
-        (num(f.privacyMatch) +
-          num(f.ctxScore) +
-          num(f.latencyScore) +
-          num(f.costScore) +
-          num(f.domainScore)) /
-        5;
-      return clamp(Math.round(avg * 100), 0, 100);
-    }
-    if (res.confidence != null)
-      return clamp(Math.round(res.confidence * 100), 0, 100);
+    if (res.score == null) return null;
+    return clamp(Math.round((res.score / MAX_SCORE) * 100), 0, 100);
+  }
 
-    if (res.score <= 1.5) return clamp(Math.round(res.score * 100), 0, 100);
-    return clamp(Math.round(res.score), 0, 100);
+  function prettyApiType(apiType?: string | null): string {
+    if (!apiType) return '';
+    const v = apiType.toLowerCase();
+    if (v === 'saas') return 'Cloud (SaaS)';
+    if (v === 'self-hosted') return 'Self-hosted';
+    if (v === 'open-source') return 'Open-source / self-host';
+    return apiType;
   }
 
   return (
@@ -159,9 +194,7 @@ export default function App() {
       <div style={cardStyle}>
         <div style={{ marginBottom: 12, textAlign: 'center' }}>
           <h2 style={titleStyle}>LLM Advisor</h2>
-          <p style={subtitleStyle}>
-            Input your task → get the best model ranked for you.
-          </p>
+          <p style={subtitleStyle}>Input your task → get the best model ranked for you.</p>
           <div style={{ marginTop: 6, fontSize: 12, color: colors.textMuted }}>
             Saved dashboards: {savedCount}
           </div>
@@ -218,47 +251,75 @@ export default function App() {
         </button>
 
         {error && <div style={errorStyle}>{error}</div>}
+        {message && !error && <div style={helperTextStyle}>{message}</div>}
 
         <div style={{ marginTop: 16, display: 'grid', gap: 14 }}>
-          {results.length === 0 && !loading && (
-            <div style={helperTextStyle}>
-              Run a recommendation to see ranked models here.
+          {/* ✅ Pipeline card */}
+          {pipeline && (
+            <div style={wordCardStyle}>
+              <div style={wordTitle}>{safe(pipeline.label)}</div>
+
+              {pipeline.steps?.map((s) => (
+                <div key={s.role} style={{ marginTop: 12 }}>
+                  <div style={wordLine}>
+                    <span style={labelStrong}>{safe(s.role)}:</span>{' '}
+                    {safe(s.model.name)} ({safe(s.model.provider)})
+                  </div>
+
+                  <div style={wordLineMuted}>
+                    <span style={labelStrong}>Hosting:</span> {prettyApiType(s.model.apiType)}
+                  </div>
+
+                  <div style={{ marginTop: 6 }}>
+                    <ul style={wordBullets}>
+                      {(s.rationale ?? []).map((r) => (
+                        <li key={r}>{r}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div style={wordLineMuted}>
+                    <span style={labelStrong}>Config:</span>{' '}
+                    temp={s.suggestedConfig.temperature}, maxOut={s.suggestedConfig.maxOutputTokens},{' '}
+                    structured={String(s.suggestedConfig.structuredOutput)}, citations=
+                    {String(s.suggestedConfig.citationsRequired)}
+                  </div>
+
+                  <div style={wordLineMuted}>
+                    <span style={labelStrong}>Prompt hint:</span> {safe(s.promptHint)}
+                  </div>
+                </div>
+              ))}
+
+              {(pipeline.notes ?? []).length > 0 && (
+                <div style={{ marginTop: 12 }}>
+                  <div style={wordLineMuted}>
+                    <span style={labelStrong}>Notes:</span>
+                  </div>
+                  <ul style={wordBullets}>
+                    {pipeline.notes.map((n) => (
+                      <li key={n}>{n}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
 
-          {results.map((res, i) => {
+          {/* Empty state */}
+          {singleModels.length === 0 && !loading && !message && (
+            <div style={helperTextStyle}>Run a recommendation to see ranked models here.</div>
+          )}
+
+          {/* ✅ use singleModels (not results) */}
+          {singleModels.slice(0, 10).map((res, i) => {
             const pct = scorePercent(res);
             const model = res.model ?? ({} as AdvisorModel);
 
-            const pros = safe((res as any).pros ?? (model as any).pros ?? '');
-            const cons = safe((res as any).cons ?? (model as any).cons ?? '');
-            const ragTip = safe((res as any).ragTip ?? '');
-            const sourcesRaw = (res as any).sources ?? '';
-            const sources = safe(
-              Array.isArray(sourcesRaw)
-                ? sourcesRaw.join('; ')
-                : String(sourcesRaw || ''),
-            );
-
-            const checks: string[] = [
-              privacy === 'Any' ? '' : 'Matches privacy requirement',
-              model.context != null &&
-              ctx != null &&
-              model.context >= ctx
-                ? 'Satisfies context window'
-                : '',
-              model.latencyMs != null &&
-              latency != null &&
-              model.latencyMs <= latency
-                ? 'Meets latency target'
-                : '',
-            ].filter(Boolean);
-
-            const bullets = Array.from(
-              new Set([...(res.why ?? []), ...checks]),
-            ).filter(Boolean);
-
-            const showSave = i === 0; // only show Save button on top model card
+            const sources = (model.sources ?? []).join('; ');
+            const pros = model.pros ?? [];
+            const cons = model.cons ?? [];
+            const warnings = res.warnings ?? [];
 
             return (
               <div key={i} style={wordCardStyle}>
@@ -269,40 +330,42 @@ export default function App() {
                     </div>
 
                     <div style={wordLine}>
-                      <span style={labelStrong}>Provider:</span>{' '}
-                      {safe(model.provider)}
+                      <span style={labelStrong}>Provider:</span> {safe(model.provider)}
+                    </div>
+
+                    <div style={wordLine}>
+                      <span style={labelStrong}>Privacy / hosting:</span>{' '}
+                      {prettyApiType(model.apiType)}
                     </div>
 
                     <div style={wordLine}>
                       <span style={labelStrong}>Context:</span>{' '}
-                      {model.context != null
-                        ? model.context.toLocaleString()
-                        : ''}{' '}
-                      tokens
+                      {model.context != null ? model.context.toLocaleString() : ''} tokens
                     </div>
 
                     <div style={wordLine}>
                       <span style={labelStrong}>Latency:</span>{' '}
-                      {model.latencyMs != null ? `${model.latencyMs} ms` : ''}
+                      {model.latencyMs == null ? 'Unknown' : `${model.latencyMs} ms`}
+                    </div>
+
+                    <div style={wordLineMuted}>
+                      <span style={labelStrong}>Confidence:</span>{' '}
+                      {confidenceLabel(res.confidence)}
                     </div>
                   </div>
 
                   <div style={wordRightCol}>
-                    {showSave && (
-                      <button
-                        onClick={() => void toggleSaveCurrentRun()}
-                        title={runSaved ? 'Unsave' : 'Save'}
-                        style={{
-                          ...starButtonStyle,
-                          color: runSaved
-                            ? colors.emeraldDark
-                            : colors.textMuted,
-                        }}
-                        disabled={!eventId}
-                      >
-                        {runSaved ? '★ Saved' : '☆ Save'}
-                      </button>
-                    )}
+                    <button
+                      onClick={() => void toggleSaveCurrentRun()}
+                      title={runSaved ? 'Unsave' : 'Save'}
+                      style={{
+                        ...starButtonStyle,
+                        color: runSaved ? colors.emeraldDark : colors.textMuted,
+                      }}
+                      disabled={!eventId}
+                    >
+                      {runSaved ? '★ Saved' : '☆ Save'}
+                    </button>
 
                     <div style={wordScore}>
                       <span style={{ opacity: 0.9 }}>Score:</span>{' '}
@@ -314,45 +377,64 @@ export default function App() {
                 <div style={{ marginTop: 10 }}>
                   <div style={wordLineMuted}>
                     <span style={labelStrong}>Cost:</span>{' '}
-                    {model.costPer1kTokens != null
-                      ? `$${model.costPer1kTokens}/1k tokens`
-                      : ''}
+                    {model.costPer1kTokens == null
+                      ? 'Unknown'
+                      : `$${model.costPer1kTokens}/1k tokens`}
                   </div>
                 </div>
 
+                {res.why && res.why.length > 0 && (
+                  <div style={{ marginTop: 10 }}>
+                    <ul style={wordBullets}>
+                      {res.why.map((t) => (
+                        <li key={t}>{t}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 <div style={{ marginTop: 10 }}>
                   <div style={wordLineMuted}>
-                    <span style={labelStrong}>Pros:</span> {pros}
+                    <span style={labelStrong}>Pros:</span>
                   </div>
+                  <ul style={wordBullets}>
+                    {pros.length ? pros.map((p) => <li key={p}>{p}</li>) : <li>—</li>}
+                  </ul>
+
                   <div style={{ height: 6 }} />
+
                   <div style={wordLineMuted}>
-                    <span style={labelStrong}>Cons:</span> {cons}
+                    <span style={labelStrong}>Cons:</span>
                   </div>
+                  <ul style={wordBullets}>
+                    {cons.length ? cons.map((c) => <li key={c}>{c}</li>) : <li>—</li>}
+                  </ul>
                 </div>
 
                 <div style={{ marginTop: 12 }}>
                   <div style={wordLineMuted}>
-                    <span style={labelStrong}>RAG tip:</span> {ragTip}
+                    <span style={labelStrong}>RAG tip:</span> {safe(model.ragTip)}
                   </div>
                   <div style={wordLineMuted}>
-                    <span style={labelStrong}>Sources:</span> {sources}
+                    <span style={labelStrong}>Sources:</span> {safe(sources)}
                   </div>
                 </div>
 
                 <div style={{ marginTop: 12 }}>
                   <div style={wordLine}>
                     <span style={labelStrong}>Tags:</span>{' '}
-                    {model.tags && model.tags.length
-                      ? model.tags.join(', ')
-                      : ''}
+                    {model.tags && model.tags.length ? model.tags.join(', ') : ''}
                   </div>
                 </div>
 
-                {bullets.length > 0 && (
-                  <div style={{ marginTop: 10 }}>
+                {warnings.length > 0 && (
+                  <div style={{ marginTop: 12 }}>
+                    <div style={wordLineMuted}>
+                      <span style={labelStrong}>Warnings:</span>
+                    </div>
                     <ul style={wordBullets}>
-                      {bullets.map((t) => (
-                        <li key={t}>{t}</li>
+                      {warnings.map((w) => (
+                        <li key={w}>{w}</li>
                       ))}
                     </ul>
                   </div>
@@ -372,11 +454,6 @@ function safe(v: any): string {
   if (v == null) return '';
   const s = String(v);
   return s === 'undefined' || s === 'null' ? '' : s;
-}
-
-function num(v: any): number {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
 }
 
 function clamp(n: number, lo: number, hi: number) {
