@@ -13,5 +13,9 @@
       "@shared/*": ["../shared/dist/*"]
     }
   },
-  "include": ["src", "scripts"]
+    "include": [
+      "src/**/*.ts",
+      "src/**/*.d.ts",
+      "tests/**/*.ts"
+    ] 
 }

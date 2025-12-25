@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "nodemon --watch src --exec tsx src/index.ts",
     "build": "tsc -p .",
-    "seed": "ts-node scripts/seedModels.ts"
+    "seed": "ts-node scripts/seedModels.ts",
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest --coverage --run"
   },
   "prisma": {
     "seed": "ts-node prisma/seedModels.ts"
@@ -29,9 +32,13 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^4.17.21",
     "@types/node": "^22.19.3",
+    "@types/supertest": "^6.0.3",
+    "@vitest/coverage-v8": "^4.0.16",
     "nodemon": "^3.1.7",
+    "supertest": "^7.1.4",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "vitest": "^4.0.16"
   }
 }

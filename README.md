@@ -60,6 +60,131 @@ Lint (frontend only):
 ```bash
 npm run lint
 ```
+Testing
+=======
+
+This repo includes **production-style testing** across backend + frontend:
+
+*   **Unit tests** (fast, isolated logic tests)
+    
+*   **Integration tests** (real Express routes + DB writes with Prisma)
+    
+*   **E2E tests** (Playwright “real user” browser flow)
+    
+
+1) Worker (Backend) Tests — Vitest
+----------------------------------
+
+Run all backend tests (watch mode):
+```bash
+cd worker
+npx vitest
+```
+Run once (CI mode):
+```bash
+cd worker
+npm run test
+```
+Coverage:
+```bash
+cd worker
+npm run test:coverage
+```
+### What backend tests cover
+
+*   **Unit tests**: core scoring helpers and recommendation logic (worker/tests/unit/...)
+    
+*   **Integration tests**: real Express routes + Prisma DB writes (worker/tests/integration/...)
+    
+    *   production auth flow (signup + login, cookie-based)
+        
+    *   POST /recommend returns results and writes a RecommendationEvent
+        
+    *   GET /recommendations regression test confirms history mapping returns topModelName
+        
+    *   contract test validates output shape + score/confidence bounds (0..1)
+        
+
+> Integration tests clean up test users + events to keep DB state deterministic.
+
+2) Web (Frontend) E2E Tests — Playwright
+----------------------------------------
+
+Run Playwright tests (headless):
+```bash
+cd web
+npx playwright test
+```
+Run Playwright with browser UI:
+```bash
+cd web
+npx playwright test --headed
+```
+### What E2E covers
+
+*   Signup with a unique test user
+    
+*   Navigate to Advisor page
+    
+*   Click Recommend
+    
+*   Assert recommendation results appear in the UI (e.g. #1 — ...)
+    
+
+3) Running E2E Locally (Important)
+----------------------------------
+
+Before running Playwright, make sure **both servers are running**:
+
+Terminal 1 (backend):
+```bash
+cd worker
+npm run dev
+```
+Terminal 2 (frontend):
+```bash
+cd web
+npm run dev
+```
+Then run Playwright:
+```bash
+cd web
+npx playwright test
+```
+4) Test Output / Ignored Files
+------------------------------
+
+Playwright generates local artifacts that should NOT be committed:
+
+*   web/test-results/
+    
+*   web/playwright-report/
+    
+
+These should be in .gitignore.
+
+CI (GitHub Actions)
+===================
+
+This repo includes a CI workflow that runs worker tests automatically on:
+
+*   every push
+    
+*   every pull\_request
+    
+
+Workflow file:
+
+*   .github/workflows/worker-tests.yml
+    
+
+The CI pipeline provisions Postgres and runs:
+
+*   Prisma migrations (or prisma db push)
+    
+*   npm run test:coverage in worker/
+
+---
 
 ## Dependencies
 ### Backend (`worker/`)

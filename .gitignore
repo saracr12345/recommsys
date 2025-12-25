@@ -11,6 +11,9 @@ build/
 .env.local
 .env.*.local
 web/.env
+web/test-results/
+web/playwright-report/
+web/.cache/
 
 # Editor / OS
 .vscode/

@@ -1,4 +1,4 @@
-// web/src/pages/Recommend/App.tsx
+// web/src/app/App.tsx
 import { useEffect, useState, type CSSProperties } from 'react';
 import { pageShell, card, input, primaryButton, colors } from '@/ui/styles';
 import { api } from '@/lib/api';

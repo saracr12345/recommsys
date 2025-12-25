@@ -19,9 +19,10 @@ router.get('/', async (req, res) => {
     });
 
     const items = events.map((e) => {
-      const results = (e.results as any[]) ?? [];
-      const top = results[0] ?? null;
-      const topModel = top?.model ?? null;
+      const payload = (e.results as any) ?? {};
+      const single = (payload.singleModels as any[]) ?? [];
+      const top = single[0] ?? null;
+      const topModel = top?.model ?? null;      
 
       return {
         id: e.id,
@@ -61,9 +62,10 @@ router.get('/saved', async (req, res) => {
 
     const items = saved.map((s) => {
       const e = s.event;
-      const results = (e.results as any[]) ?? [];
-      const top = results[0] ?? null;
-      const topModel = top?.model ?? null;
+      const payload = (e.results as any) ?? {};
+      const single = (payload.singleModels as any[]) ?? [];
+      const top = single[0] ?? null;
+      const topModel = top?.model ?? null;      
 
       return {
         id: s.id,

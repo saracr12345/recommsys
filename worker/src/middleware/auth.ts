@@ -1,14 +1,7 @@
 // worker/src/middleware/auth.ts
 import type { Request, Response, NextFunction } from 'express';
 import { randomBytes } from 'crypto';
-import Redis from 'ioredis';
-
-// If you DON'T want a separate redis.ts for now, you can have a small local client:
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
-  maxRetriesPerRequest: 2,
-});
-
-redis.on('error', (e) => console.error('[redis] error', e.message));
+import { redis } from '../redis.js';
 
 const SESSION_COOKIE_NAME = 'sid';
 const SESSION_TTL_SECONDS = Number(
