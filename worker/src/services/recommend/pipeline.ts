@@ -86,7 +86,7 @@ type AdvisorModel = {
   ): RecommendedPipeline | null {
     if (!ranked.length) return null;
   
-    // We only build a pipeline for text tasks (your UI is text-only anyway).
+    // We only build a pipeline for text tasks ( UI is text-only anyway).
     const candidates = ranked;
   
     // 1) Retriever / Query Rewriter: prioritize cheap + fast + “good enough”
@@ -95,7 +95,7 @@ type AdvisorModel = {
       (r) => 0.55 * r.factors.costScore + 0.35 * r.factors.latencyScore + 0.10 * r.factors.ctxScore
     );
   
-    // 2) Reasoner: prioritize domain fit + context + overall quality (low unknown penalty)
+    // 2) Reasoner: prioritize domain fit + context + overall quality
     const reasoner = chooseBest(
       candidates,
       (r) =>

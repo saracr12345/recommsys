@@ -4,7 +4,7 @@ test("signup/login → advisor → recommend shows results", async ({ page }) =>
   const email = `e2e_${Date.now()}@example.com`;
   const password = "test-password-123";
 
-  // Go to signup (if your app redirects, this still works)
+  // Go to signup
   await page.goto("http://localhost:5173/signup");
 
   // Fill fields using stable selectors

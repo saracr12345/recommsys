@@ -6,7 +6,6 @@ import { prisma } from "../../src/prisma.js";
 const TEST_EMAIL = "test@example.com";
 const TEST_PASSWORD = "test-password-123";
 
-// Keep test data namespaced so cleanup is safe + predictable
 const TEST_MODEL_IDS = ["test-gpt-mini", "test-llama"];
 
 async function seedModels() {

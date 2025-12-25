@@ -56,15 +56,9 @@ jobs:
         working-directory: worker
         run: npx prisma generate
 
-      # Use ONE of these:
       - name: Prisma migrate (if you have migrations)
         working-directory: worker
         run: npx prisma migrate deploy
-
-      # If you DON'T have migrations yet, comment the migrate step above and use:
-      # - name: Prisma db push (no migrations)
-      #   working-directory: worker
-      #   run: npx prisma db push
 
       - name: Run tests (coverage)
         working-directory: worker
