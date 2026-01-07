@@ -5,6 +5,87 @@ console.log("🚀 seedModels.ts started");
 
 const prisma = new PrismaClient();
 
+/**
+ * Normalize tags so recommender can rely on them:
+ * - lowercase
+ * - trim
+ * - de-dupe
+ * - remove empty
+ */
+function normTags(tags: string[]): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+
+  for (const raw of tags ?? []) {
+    const t = String(raw ?? "").trim().toLowerCase();
+    if (!t) continue;
+    if (seen.has(t)) continue;
+    seen.add(t);
+    out.push(t);
+  }
+
+  return out;
+}
+
+/**
+ * Auto-enrich tags based on id/name/family/modality.
+ * This makes rankings feel "business tier" even if manual tags are imperfect.
+ *
+ * IMPORTANT:
+ * - We do NOT auto-add "deprecated".
+ * - We DO auto-add: preview, legacy, rag/retrieval, coding, reasoning/analysis, vision/audio.
+ */
+function enrichTags(m: {
+  id: string;
+  name: string;
+  family: string;
+  modality: string;
+  domainTags: string[];
+}): string[] {
+  const tags = new Set(normTags(m.domainTags));
+  const id = String(m.id).toLowerCase();
+  const name = String(m.name).toLowerCase();
+  const fam = String(m.family).toLowerCase();
+  const modality = String(m.modality).toLowerCase();
+
+  // --- stability signals ---
+  if (id.includes("preview") || name.includes("preview")) tags.add("preview");
+
+  // legacy families + older OpenAI lines
+  if (
+    tags.has("legacy") ||
+    fam.includes("legacy") ||
+    name.includes("davinci") ||
+    name.includes("babbage") ||
+    name.includes("gpt-3.5")
+  ) {
+    tags.add("legacy");
+  }
+
+  // --- RAG / retrieval signals ---
+  if (id.includes("search") || tags.has("search") || tags.has("web")) {
+    tags.add("retrieval");
+    tags.add("rag");
+  }
+
+  // --- coding signals ---
+  if (id.includes("codex") || tags.has("code") || tags.has("programming")) {
+    tags.add("coding");
+  }
+
+  // --- reasoning signals ---
+  if (fam.startsWith("o") || fam.includes("o4") || tags.has("reasoning")) {
+    tags.add("reasoning");
+    tags.add("analysis");
+  }
+
+  // --- modality hints ---
+  if (modality.includes("image")) tags.add("vision");
+  if (modality.includes("audio")) tags.add("audio");
+
+  return Array.from(tags);
+}
+
 const models: Array<{
   id: string;
   name: string;
@@ -2992,6 +3073,9 @@ function asJsonArray(arr: string[]): Prisma.InputJsonValue {
 
 async function main() {
   for (const m of models) {
+    // normalize + enrich tags
+    const finalTags = enrichTags(m);
+
     await prisma.modelProfile.upsert({
       where: { id: m.id },
       update: {
@@ -3007,7 +3091,9 @@ async function main() {
         source: m.source,
         url: m.url,
 
-        domainTags: asJsonArray(m.domainTags),
+        //changed
+        domainTags: asJsonArray(finalTags),
+
         pros: asJsonArray(m.pros),
         cons: asJsonArray(m.cons),
         ragTips: asJsonArray(m.ragTips),
@@ -3029,7 +3115,9 @@ async function main() {
         source: m.source,
         url: m.url,
 
-        domainTags: asJsonArray(m.domainTags),
+        // changed
+        domainTags: asJsonArray(finalTags),
+
         pros: asJsonArray(m.pros),
         cons: asJsonArray(m.cons),
         ragTips: asJsonArray(m.ragTips),

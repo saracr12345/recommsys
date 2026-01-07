@@ -98,9 +98,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             />
 
             {/* hover arrow */}
-            {logoHover && (
-              <span style={{ fontSize: 20, lineHeight: 1 }}>›</span>
-            )}
+            {logoHover && <span style={{ fontSize: 20, lineHeight: 1 }}>›</span>}
           </button>
         ) : (
           // EXPANDED: long logo (click -> feed) + collapse chevron
@@ -130,17 +128,10 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               <button
                 type="button"
                 onClick={onToggle}
-                style={collapseButton}
+                style={{ ...collapseButton, marginRight: 12 }}
                 title="Collapse sidebar"
               >
-                <span
-                  style={{
-                    fontSize: 20,
-                    lineHeight: 1,
-                  }}
-                >
-                  ‹
-                </span>
+                <span style={{ fontSize: 20, lineHeight: 1 }}>‹</span>
               </button>
             </div>
           </div>
@@ -155,24 +146,9 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             marginTop: collapsed ? 12 : 4,
           }}
         >
-          <NavItem
-            to="/aichat"
-            label="New Chat"
-            collapsed={collapsed}
-            iconSrc="/newchat.jpeg"
-          />
-          <NavItem
-            to="/"
-            label="Explore Feed"
-            collapsed={collapsed}
-            iconSrc="/feed.jpeg"
-          />
-          <NavItem
-            to="/advisor"
-            label="Recommend"
-            collapsed={collapsed}
-            iconSrc="/advisor.jpeg"
-          />
+          <NavItem to="/aichat" label="New Chat" collapsed={collapsed} iconSrc="/newchat.jpeg" />
+          <NavItem to="/" label="Explore Feed" collapsed={collapsed} iconSrc="/feed.jpeg" />
+          <NavItem to="/advisor" label="Recommend" collapsed={collapsed} iconSrc="/advisor.jpeg" />
         </nav>
       </div>
 
@@ -189,9 +165,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         >
           <button style={secondaryItemStyle}>Send Feedback</button>
           <button style={secondaryItemStyle}>Report Bugs</button>
-          <div style={{ marginTop: 6 }}>
-            Terms of Use · Privacy Policy · Cookies
-          </div>
+          <div style={{ marginTop: 6 }}>Terms of Use · Privacy Policy · Cookies</div>
         </div>
       )}
     </aside>
