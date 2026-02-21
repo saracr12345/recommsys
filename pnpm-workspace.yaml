@@ -1,0 +1,11 @@
+packages:
+  - web
+  - worker
+  - shared
+
+ignoredBuiltDependencies:
+  - '@prisma/client'
+  - '@prisma/engines'
+  - argon2
+  - esbuild
+  - prisma

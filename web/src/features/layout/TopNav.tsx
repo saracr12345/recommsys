@@ -14,14 +14,16 @@ const tabBaseStyle: React.CSSProperties = {
 type TabLinkProps = {
   to: string
   children: React.ReactNode
+  end?: boolean
 }
 
-function TabLink({ to, children }: TabLinkProps) {
+function TabLink({ to, children, end }: TabLinkProps) {
   const [hovered, setHovered] = useState(false)
 
   return (
     <NavLink
       to={to}
+      end={end}
       style={({ isActive }) => ({
         ...tabBaseStyle,
         color: isActive ? colors.emeraldDark : colors.textMuted,
@@ -37,17 +39,12 @@ function TabLink({ to, children }: TabLinkProps) {
   )
 }
 
-export default function TopNav({
-  sidebarCollapsed,
-}: {
-  sidebarCollapsed: boolean
-}) {
+export default function TopNav({ sidebarCollapsed }: { sidebarCollapsed: boolean }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
 
   const initials = user?.email ? user.email.trim()[0]?.toUpperCase() || 'U' : 'U'
-
   const shortEmail =
     user?.email && user.email.length > 24 ? user.email.slice(0, 24) + '…' : user?.email ?? ''
 
@@ -81,23 +78,17 @@ export default function TopNav({
           alignItems: 'center',
         }}
       >
-        {/* LEFT SPACER */}
         <div style={{ flex: 1 }} />
 
-        {/* CENTER TABS */}
-        <nav
-          style={{
-            display: 'flex',
-            gap: 28,
-            justifyContent: 'center',
-          }}
-        >
-          <TabLink to="/">Explore</TabLink>
+        <nav style={{ display: 'flex', gap: 28, justifyContent: 'center' }}>
+          <TabLink to="/" end>
+            Explore
+          </TabLink>
           <TabLink to="/advisor">Recommend</TabLink>
+          <TabLink to="/feed">Community</TabLink>
           <TabLink to="/aichat">Chat</TabLink>
         </nav>
 
-        {/* RIGHT SIDE - avatar + menu */}
         <div
           style={{
             flex: 1,
@@ -109,13 +100,7 @@ export default function TopNav({
           }}
         >
           {user ? (
-            <div
-              style={{
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <button
                 type="button"
                 onClick={() => setMenuOpen((v) => !v)}
@@ -127,8 +112,7 @@ export default function TopNav({
                   background: 'transparent',
                   cursor: 'pointer',
                   padding: 0,
-
-                  marginLeft: -255, 
+                  marginLeft: -255,
                 }}
                 title={user.email}
               >
@@ -148,17 +132,9 @@ export default function TopNav({
                 >
                   {initials}
                 </div>
-                <span
-                  style={{
-                    fontSize: 13,
-                    color: colors.textMuted,
-                  }}
-                >
-                  {shortEmail}
-                </span>
+                <span style={{ fontSize: 13, color: colors.textMuted }}>{shortEmail}</span>
               </button>
 
-              {/* DROPDOWN MENU */}
               {menuOpen && (
                 <div
                   style={{
