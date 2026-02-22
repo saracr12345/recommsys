@@ -1,165 +1,233 @@
-import { useState, type CSSProperties, type FormEvent } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import {
-  pageShell,
-  card,
-  input,
-  primaryButton,
-  colors,
-} from '@/ui/styles';
-import { api } from '@/lib/api';
-import { useAuth } from '@/features/auth/AuthContext';
+import { useState, type FormEvent } from 'react'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { Mail, Lock, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff, Sparkles } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+import { api } from '@/lib/api'
+import { useAuth } from '@/features/auth/AuthContext'
 
 export default function LoginForm() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [msg, setMsg] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const { setUser } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
-  const redirectTo =
-    (location.state as any)?.from?.pathname ??
-    '/';
+  const [msg, setMsg] = useState('')
+  const [msgType, setMsgType] = useState<'success' | 'error' | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+
+  const { setUser } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  const redirectTo = (location.state as any)?.from?.pathname ?? '/'
 
   async function submit(e: FormEvent) {
-    e.preventDefault();
-    setSubmitting(true);
-    setMsg('');
+    e.preventDefault()
+    setSubmitting(true)
+    setMsg('')
+    setMsgType(null)
 
     try {
       const data = await api<{
-        ok: boolean;
-        user?: { id: number; email: string };
-        error?: string;
+        ok: boolean
+        user?: { id: number; email: string }
+        error?: string
       }>('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
-      });
+      })
 
       if (data.ok && data.user) {
-        setUser(data.user);
-        navigate(redirectTo, { replace: true });
+        setUser(data.user)
+        setMsgType('success')
+        setMsg('✓ Logged in! Redirecting…')
+        navigate(redirectTo, { replace: true })
       } else {
-        setMsg(data.error || 'Login failed');
+        setMsgType('error')
+        setMsg(data.error || 'Login failed')
       }
     } catch (err: any) {
-      setMsg(err?.message || 'Network error');
+      setMsgType('error')
+      setMsg(err?.message || 'Network error')
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
   }
 
+  const isFormValid = email.trim().length > 0 && password.length > 0
+
   return (
-    <div style={pageStyle}>
-      <form onSubmit={submit} style={cardStyle}>
-        <div style={{ marginBottom: 12 }}>
-          <h2
-            style={{
-              margin: 0,
-              fontSize: 20,
-              fontWeight: 700,
-              color: colors.textMain,
-              textAlign: 'center',
-            }}
-          >
-            Log in
-          </h2>
-          <p
-            style={{
-              marginTop: 6,
-              marginBottom: 0,
-              fontSize: 14,
-              color: colors.textMuted,
-              textAlign: 'center',
-            }}
-          >
-            Enter your details to access LLM Advisor.
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/30 to-slate-50 flex items-center justify-center px-4 py-8 relative">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 right-20 w-72 h-72 bg-emerald-200/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 left-20 w-72 h-72 bg-emerald-100/20 rounded-full blur-3xl" />
+      </div>
+
+      {/* Form Card */}
+      <div className="relative w-full max-w-md">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden">
+          {/* Header gradient bar */}
+          <div className="h-1 bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700" />
+
+          <form onSubmit={submit} className="p-8 space-y-6">
+            {/* Icon */}
+            <div className="flex justify-center mb-2">
+              <div className="p-3 bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-xl">
+                <Sparkles className="w-6 h-6 text-emerald-600" />
+              </div>
+            </div>
+
+            {/* Heading */}
+            <div className="text-center space-y-2">
+              <h1 className="text-3xl font-bold text-slate-900">Welcome Back</h1>
+              <p className="text-sm text-slate-600">Enter your details to access your account</p>
+            </div>
+
+            {/* Email */}
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-sm font-semibold text-slate-900">
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-500 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200"
+                  required
+                  autoComplete="email"
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="block text-sm font-semibold text-slate-900">
+                  Password
+                </label>
+                {/* Keep as a placeholder if you don’t have the route yet */}
+                <button
+                  type="button"
+                  className="text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
+                  onClick={() => {
+                    setMsgType('error')
+                    setMsg('Forgot password is not implemented yet.')
+                  }}
+                >
+                  Forgot?
+              </button>
+              </div>
+
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-10 pr-12 py-3 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-500 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200"
+                  required
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Message */}
+            {msg && (
+              <div
+                className={cn(
+                  'p-4 rounded-lg border flex items-start gap-3 text-sm font-medium',
+                  msgType === 'success'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                    : 'bg-red-50 border-red-200 text-red-700',
+                )}
+              >
+                {msgType === 'success' ? (
+                  <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                )}
+                <div>{msg}</div>
+              </div>
+            )}
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={submitting || !isFormValid}
+              className={cn(
+                'w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-semibold transition-all duration-200 text-base',
+                submitting || !isFormValid
+                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
+                  : 'bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-lg hover:shadow-xl hover:scale-105',
+              )}
+            >
+              {submitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Logging in…
+                </>
+              ) : (
+                <>
+                  Log In
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+
+            {/* Divider */}
+            <div className="relative flex items-center gap-3">
+              <div className="flex-1 h-px bg-slate-200" />
+              <span className="text-xs text-slate-500 font-medium">or</span>
+              <div className="flex-1 h-px bg-slate-200" />
+            </div>
+
+            {/* Signup Link (SPA-safe) */}
+            <div className="text-center">
+              <p className="text-sm text-slate-600">
+                Don&apos;t have an account?{' '}
+                <Link to="/signup" className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">
+                  Create one
+                </Link>
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="text-center pt-4 border-t border-slate-200">
+              <p className="text-xs text-slate-500">
+                By logging in, you agree to our <span className="text-emerald-600 font-medium">Terms</span> and{' '}
+                <span className="text-emerald-600 font-medium">Privacy Policy</span>.
+              </p>
+            </div>
+          </form>
         </div>
 
-        <div style={{ display: 'grid', gap: 12 }}>
-          {/* Email */}
-          <div style={fieldStyle}>
-            <label htmlFor="email" style={labelStyle}>
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={inputStyle}
-            />
+        {/* Trust badges */}
+        <div className="mt-6 flex items-center justify-center gap-6 text-xs text-slate-600">
+          <div className="flex items-center gap-1">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <span>Secure &amp; encrypted</span>
           </div>
-
-          {/* Password */}
-          <div style={fieldStyle}>
-            <label htmlFor="password" style={labelStyle}>
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={inputStyle}
-            />
+          <div className="flex items-center gap-1">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <span>No credit card</span>
           </div>
         </div>
-
-        {!!msg && <div style={messageStyle}>{msg}</div>}
-
-        <button type="submit" disabled={submitting} style={buttonStyle}>
-          {submitting ? 'Logging in…' : 'Log in'}
-        </button>
-      </form>
+      </div>
     </div>
-  );
+  )
 }
-
-/* ---------- styles ---------- */
-
-const pageStyle: CSSProperties = {
-  ...pageShell,
-};
-
-const cardStyle: CSSProperties = {
-  ...card,
-  width: 380,
-};
-
-const fieldStyle: CSSProperties = {
-  display: 'grid',
-  gap: 4,
-};
-
-const labelStyle: CSSProperties = {
-  fontSize: 13,
-  color: colors.textMuted,
-};
-
-const inputStyle: CSSProperties = {
-  ...input,
-  boxSizing: 'border-box',
-} as const;
-
-const buttonStyle: CSSProperties = {
-  ...primaryButton,
-  marginTop: 8,
-  width: '100%',
-};
-
-const messageStyle: CSSProperties = {
-  marginTop: 8,
-  padding: 8,
-  borderRadius: 8,
-  fontSize: 13,
-  textAlign: 'center',
-  background: colors.dangerSoft,
-  border: `1px solid ${colors.dangerBorder}`,
-  color: colors.danger,
-};

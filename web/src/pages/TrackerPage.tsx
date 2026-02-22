@@ -1,450 +1,351 @@
-// web/src/pages/TrackerPage.tsx
+// Enhanced Tracker Page - Premium UI with Interactive Green-Themed Cards
+import * as React from "react";
 import {
   useEffect,
   useMemo,
   useRef,
   useState,
-  type CSSProperties,
-} from 'react'
+} from "react";
+import {
+  SearchIcon,
+  RefreshCwIcon,
+  StarIcon,
+  ExternalLinkIcon,
+  CheckCircle2Icon,
+  CircleIcon,
+  FilterIcon,
+  TagIcon,
+  TrendingUpIcon,
+  XIcon,
+  Sparkles,
+  ArrowUpRight,
+  ArrowDownRight,
+} from "lucide-react";
 
-/* ---------- design tokens ---------- */
-
-const colors = {
-  pageBg: '#f3faf7',
-  cardBg: '#ffffff',
-  cardBorder: '#d4e9e2',
-  cardShadow: '0 10px 30px rgba(0,103,79,0.12)',
-  textMain: '#022c22',
-  textMuted: '#4b5563',
-  accentEmerald: '#00674F',
-  accentEmeraldSoft: '#e0f2f0',
-  accentBlue: '#89cff0',
-}
-
-/* ---------- base layout styles ---------- */
-
-const styles: Record<string, CSSProperties> = {
-  page: {
-    fontFamily:
-      'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
-    padding: 16,
-    paddingTop: 0,
-    color: colors.textMain,
-    background: colors.pageBg,
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 16,
-    position: 'sticky',
-    top: 0,
-    zIndex: 5,
-    background: colors.pageBg,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: '300px 1fr',
-    gap: 16,
-    alignItems: 'start', // same top baseline
-  },
-
-  sidebar: { display: 'grid', gap: 12, alignContent: 'start' },
-
-  card: {
-    background: colors.cardBg,
-    border: `1px solid ${colors.cardBorder}`,
-    borderRadius: 18,
-    padding: 14,
-    boxShadow: colors.cardShadow,
-  },
-  cardTitle: {
-    margin: 0,
-    marginBottom: 8,
-    fontSize: 14,
-    fontWeight: 700,
-    color: colors.textMain,
-  },
-  label: {
-    display: 'block',
-    fontSize: 12,
-    color: '#334155',
-    marginBottom: 6,
-  },
-  input: {
-    width: '100%',
-    padding: '8px 10px',
-    border: '1px solid #cbd5e1',
-    borderRadius: 8,
-    outline: 'none',
-    boxSizing: 'border-box',
-    background: '#f9fafb',
-  },
-  button: {
-    padding: '8px 12px',
-    borderRadius: 999,
-    border: `1px solid ${colors.cardBorder}`,
-    background: colors.accentEmeraldSoft,
-    cursor: 'pointer',
-    fontSize: 13,
-  },
-  buttonPrimary: {
-    padding: '8px 16px',
-    borderRadius: 999,
-    border: 'none',
-    background: colors.accentEmerald,
-    color: '#ffffff',
-    cursor: 'pointer',
-    fontSize: 13,
-    fontWeight: 600,
-    boxShadow: '0 8px 20px rgba(0,103,79,0.35)',
-  },
-  textButton: {
-    padding: 0,
-    border: 'none',
-    background: 'transparent',
-    color: colors.accentEmerald,
-    cursor: 'pointer',
-    fontSize: 12,
-  },
-  pill: {
-    fontSize: 12,
-    padding: '6px 10px',
-    background: '#f1f5f9',
-    border: '1px solid #e2e8f0',
-    borderRadius: 999,
-    cursor: 'pointer',
-  },
-  feedGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 },
-  info: {
-    background: '#ecfeff',
-    border: '1px solid #bae6fd',
-    color: '#075985',
-    padding: 10,
-    borderRadius: 10,
-    fontSize: 12,
-  },
-  error: {
-    background: '#fef2f2',
-    border: '1px solid #fecaca',
-    color: '#b91c1c',
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 12,
-    fontSize: 13,
-  },
-}
-
-/* ---------- feed card styles  ---------- */
-
-const feedCardStyle: CSSProperties = {
-  ...styles.card,
-  minHeight: 190,
-  maxHeight: 190,
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'space-between',
-  overflow: 'hidden',
-  borderRadius: 20,
-  boxShadow: '0 10px 30px rgba(15,23,42,0.12)',
-}
-
-const feedTitleRow: CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  gap: 8,
-  alignItems: 'flex-start',
-}
-
-const feedTitleText: CSSProperties = {
-  fontWeight: 600,
-  fontSize: 14,
-}
-
-const feedMetaText: CSSProperties = {
-  marginTop: 4,
-  fontSize: 12,
-  color: colors.textMuted,
-}
-
-const feedSummaryText: CSSProperties = {
-  marginTop: 8,
-  fontSize: 13,
-  color: colors.textMain,
-  display: '-webkit-box',
-  WebkitLineClamp: 3,
-  WebkitBoxOrient: 'vertical',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-}
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 /* ---------- localStorage + helpers ---------- */
 
 const STORAGE_KEYS = {
-  KEYWORDS: 'llmtech.keywords.v1',
-  READ: 'llmtech.read.v1',
-  FAV: 'llmtech.fav.v1',
-  PREFS: 'llmtech.prefs.v1',
-}
+  KEYWORDS: "llmtech.keywords.v1",
+  READ: "llmtech.read.v1",
+  FAV: "llmtech.fav.v1",
+  PREFS: "llmtech.prefs.v1",
+};
 
 const defaultKeywords = [
-  'RAG',
-  'distillation',
-  'quantization',
-  'agent',
-  'reasoning',
-  'multimodal',
-  'benchmark',
-  'inference',
-  'training',
-  'speculative decoding',
-  'LoRA',
-  'QLoRA',
-  'tool use',
-  'memory',
-  'long context',
-  'mixture of experts',
-  'safety',
-  'alignment',
-]
+  "RAG",
+  "distillation",
+  "quantization",
+  "agent",
+  "reasoning",
+  "multimodal",
+  "benchmark",
+  "inference",
+  "training",
+  "speculative decoding",
+  "LoRA",
+  "QLoRA",
+  "tool use",
+  "memory",
+  "long context",
+  "mixture of experts",
+  "safety",
+  "alignment",
+];
 
 function saveLocal(key: string, val: any) {
   try {
-    localStorage.setItem(key, JSON.stringify(val))
+    localStorage.setItem(key, JSON.stringify(val));
   } catch {}
 }
 
 function loadLocal<T>(key: string, fallback: T): T {
   try {
-    const v = localStorage.getItem(key)
-    return v ? (JSON.parse(v) as T) : fallback
+    const v = localStorage.getItem(key);
+    return v ? (JSON.parse(v) as T) : fallback;
   } catch {
-    return fallback
+    return fallback;
   }
 }
 
 function timeSince(dateStr?: string) {
-  const d = new Date(dateStr || '')
-  if (Number.isNaN(d.getTime())) return ''
-  const diff = (Date.now() - d.getTime()) / 1000
-  if (diff < 60) return `${Math.floor(diff)}s ago`
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
-  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`
-  return d.toLocaleDateString()
+  const d = new Date(dateStr || "");
+  if (Number.isNaN(d.getTime())) return "";
+  const diff = (Date.now() - d.getTime()) / 1000;
+  if (diff < 60) return `${Math.floor(diff)}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+  return d.toLocaleDateString();
 }
 
 function useDebounced<T>(value: T, delay = 300) {
-  const [v, setV] = useState(value)
+  const [v, setV] = useState(value);
   useEffect(() => {
-    const t = setTimeout(() => setV(value), delay)
-    return () => clearTimeout(t)
-  }, [value, delay])
-  return v
+    const t = setTimeout(() => setV(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return v;
 }
 
-/* ---------- main page ---------- */
+function stripHtml(html: string) {
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  return (div.textContent || div.innerText || "").trim();
+}
 
-export default function TrackerPage() {
-  // Feeds come from backend '/feeds'
-  const [keywords, setKeywords] = useState(() =>
-    loadLocal(STORAGE_KEYS.KEYWORDS, defaultKeywords),
-  )
+function highlightKeywords(text: string, kwsLower: string[]) {
+  if (!text) return text;
+
+  const lower = text.toLowerCase();
+  const ranges: Array<[number, number]> = [];
+
+  for (const k of kwsLower) {
+    if (!k) continue;
+    let idx = 0;
+    while (true) {
+      idx = lower.indexOf(k, idx);
+      if (idx === -1) break;
+      ranges.push([idx, idx + k.length]);
+      idx += k.length;
+    }
+  }
+
+  if (!ranges.length) return text;
+
+  ranges.sort((a, b) => a[0] - b[0]);
+  const merged: Array<[number, number]> = [];
+  for (const [s, e] of ranges) {
+    if (!merged.length || s > merged[merged.length - 1][1]) merged.push([s, e]);
+    else merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], e);
+  }
+
+  const parts: React.ReactNode[] = [];
+  let prev = 0;
+  merged.forEach(([s, e], i) => {
+    if (s > prev) parts.push(text.slice(prev, s));
+    parts.push(
+      <mark
+        key={i}
+        className="rounded-md bg-emerald-200/70 px-1.5 py-0.5 text-foreground font-medium"
+      >
+        {text.slice(s, e)}
+      </mark>
+    );
+    prev = e;
+  });
+  if (prev < text.length) parts.push(text.slice(prev));
+
+  return <>{parts}</>;
+}
+
+/* ---------- types ---------- */
+
+type Prefs = {
+  tab: "all" | "paper" | "blog";
+  sort: "newest" | "oldest" | "relevance";
+  onlyKeywordMatches: boolean;
+  showSummaries: boolean;
+  onlyFavorites: boolean;
+};
+
+type FeedItem = {
+  id: string;
+  title: string;
+  summary?: string;
+  date?: string;
+  link?: string;
+  author?: string;
+  source?: string;
+  type?: "paper" | "blog" | string;
+};
+
+/* ---------- page ---------- */
+
+export default function EnhancedTrackerPage() {
+  const [keywords, setKeywords] = useState<string[]>(() =>
+    loadLocal(STORAGE_KEYS.KEYWORDS, defaultKeywords)
+  );
   const [readIds, setReadIds] = useState<Record<string, boolean>>(() =>
-    loadLocal(STORAGE_KEYS.READ, {}),
-  )
+    loadLocal(STORAGE_KEYS.READ, {})
+  );
   const [favIds, setFavIds] = useState<Record<string, boolean>>(() =>
-    loadLocal(STORAGE_KEYS.FAV, {}),
-  )
-  const [prefs, setPrefs] = useState(() =>
+    loadLocal(STORAGE_KEYS.FAV, {})
+  );
+  const [prefs, setPrefs] = useState<Prefs>(() =>
     loadLocal(STORAGE_KEYS.PREFS, {
-      tab: 'all',
-      sort: 'newest',
+      tab: "all",
+      sort: "newest",
       onlyKeywordMatches: true,
       showSummaries: true,
       onlyFavorites: false,
-    }),
-  )
+    })
+  );
 
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [entries, setEntries] = useState<any[]>([])
-  const [q, setQ] = useState('')
-  const qDebounced = useDebounced(q, 250)
-  const [newKeyword, setNewKeyword] = useState('')
-  const [activeKws, setActiveKws] = useState<string[]>([])
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [entries, setEntries] = useState<FeedItem[]>([]);
+  const [q, setQ] = useState("");
+  const qDebounced = useDebounced(q, 250);
+
+  const [newKeyword, setNewKeyword] = useState("");
+  const [activeKws, setActiveKws] = useState<string[]>([]);
   const [financeTrends, setFinanceTrends] = useState<
     Array<{ term: string; change: number; now: number; prev: number }>
-  >([])
-  const lastRefreshedRef = useRef<Date | null>(null)
+  >([]);
 
-  //  measure header height so sidebar sticky offset never jumps
-  const headerRef = useRef<HTMLElement | null>(null)
-  const [headerH, setHeaderH] = useState(0)
+  const lastRefreshedRef = useRef<Date | null>(null);
 
-  useEffect(() => saveLocal(STORAGE_KEYS.KEYWORDS, keywords), [keywords])
-  useEffect(() => saveLocal(STORAGE_KEYS.READ, readIds), [readIds])
-  useEffect(() => saveLocal(STORAGE_KEYS.FAV, favIds), [favIds])
-  useEffect(() => saveLocal(STORAGE_KEYS.PREFS, prefs), [prefs])
-
-  useEffect(() => {
-    const el = headerRef.current
-    if (!el) return
-
-    const measure = () => {
-      const h = Math.ceil(el.getBoundingClientRect().height)
-      setHeaderH(h)
-    }
-
-    measure()
-    const ro = new ResizeObserver(measure)
-    ro.observe(el)
-    window.addEventListener('resize', measure)
-
-    return () => {
-      ro.disconnect()
-      window.removeEventListener('resize', measure)
-    }
-  }, [])
+  useEffect(() => saveLocal(STORAGE_KEYS.KEYWORDS, keywords), [keywords]);
+  useEffect(() => saveLocal(STORAGE_KEYS.READ, readIds), [readIds]);
+  useEffect(() => saveLocal(STORAGE_KEYS.FAV, favIds), [favIds]);
+  useEffect(() => saveLocal(STORAGE_KEYS.PREFS, prefs), [prefs]);
 
   async function refreshFeeds() {
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError("");
     try {
-      const r = await fetch('http://localhost:8787/feeds', { cache: 'no-store' })
-      if (!r.ok) throw new Error('feeds failed')
-      const items = await r.json()
+      const r = await fetch("http://localhost:8787/feeds", { cache: "no-store" });
+      if (!r.ok) throw new Error("feeds failed");
+      const items = (await r.json()) as FeedItem[];
 
-      // items are already deduped/sorted by the backend, but keep client sorting toggle
       const sorted = [...items].sort((a, b) => {
-        const da = new Date(a.date).getTime() || 0
-        const db = new Date(b.date).getTime() || 0
-        return prefs.sort === 'oldest' ? da - db : db - da
-      })
-      setEntries(sorted)
-      lastRefreshedRef.current = new Date()
-    } catch (e) {
-      setError('Failed to fetch feeds (server). Try again later.')
+        const da = new Date(a.date || "").getTime() || 0;
+        const db = new Date(b.date || "").getTime() || 0;
+        return prefs.sort === "oldest" ? da - db : db - da;
+      });
+
+      setEntries(sorted);
+      lastRefreshedRef.current = new Date();
+    } catch {
+      setError("Failed to fetch feeds (server). Try again later.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-    refreshFeeds()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // initial load
+    refreshFeeds();
+  }, []);
 
   // Finance trend detection...
   useEffect(() => {
     if (!entries.length) {
-      setFinanceTrends([])
-      return
+      setFinanceTrends([]);
+      return;
     }
+
     const financeTerms = [
-      'finance',
-      'financial',
-      'stocks',
-      'market',
-      'portfolio',
-      'trading',
-      'sentiment',
-      'earnings',
-      'bank',
-      'macro',
-      'inflation',
-      'risk',
-      'credit',
-      'bond',
-    ]
-    const now = Date.now()
-    const day = 24 * 3600 * 1000
-    const w1 = now - 7 * day
-    const w2 = now - 14 * day
+      "finance",
+      "financial",
+      "stocks",
+      "market",
+      "portfolio",
+      "trading",
+      "sentiment",
+      "earnings",
+      "bank",
+      "macro",
+      "inflation",
+      "risk",
+      "credit",
+      "bond",
+    ];
+
+    const now = Date.now();
+    const day = 24 * 3600 * 1000;
+    const w1 = now - 7 * day;
+    const w2 = now - 14 * day;
 
     const score = (start: number, end: number) => {
-      const counts: Record<string, number> = {}
+      const counts: Record<string, number> = {};
       for (const it of entries) {
-        const t = new Date(it.date || '').getTime()
-        if (!t || t < end || t >= start) continue
-        const text = `${it.title} ${it.summary}`.toLowerCase()
+        const t = new Date(it.date || "").getTime();
+        if (!t || t < end || t >= start) continue;
+        const text = `${it.title} ${it.summary || ""}`.toLowerCase();
         for (const term of financeTerms) {
-          if (text.includes(term))
-            counts[term] = (counts[term] || 0) + 1
+          if (text.includes(term)) counts[term] = (counts[term] || 0) + 1;
         }
       }
-      return counts
-    }
+      return counts;
+    };
 
-    const prev = score(w2, w1)
-    const cur = score(now, w1)
-    const merged = Array.from(
-      new Set([...Object.keys(prev), ...Object.keys(cur)]),
-    ).map((term) => ({
-      term,
-      prev: prev[term] || 0,
-      now: cur[term] || 0,
-      change: (cur[term] || 0) - (prev[term] || 0),
-    }))
-    merged.sort((a, b) => b.change - a.change || b.now - a.now)
-    setFinanceTrends(merged.slice(0, 8))
-  }, [entries])
+    const prev = score(w2, w1);
+    const cur = score(now, w1);
+
+    const merged = Array.from(new Set([...Object.keys(prev), ...Object.keys(cur)]))
+      .map((term) => ({
+        term,
+        prev: prev[term] || 0,
+        now: cur[term] || 0,
+        change: (cur[term] || 0) - (prev[term] || 0),
+      }))
+      .sort((a, b) => b.change - a.change || b.now - a.now)
+      .slice(0, 8);
+
+    setFinanceTrends(merged);
+  }, [entries]);
+
+  const kwLower = useMemo(() => keywords.map((k) => k.toLowerCase()), [keywords]);
 
   const filtered = useMemo(() => {
-    const ql = (qDebounced || '').trim().toLowerCase()
-    const baseKw = (activeKws.length ? activeKws : (keywords as string[])).map(
-      (k) => k.toLowerCase(),
-    )
-    const kwSet = new Set(baseKw)
+    const ql = (qDebounced || "").trim().toLowerCase();
+    const baseKw = (activeKws.length ? activeKws : keywords).map((k) => k.toLowerCase());
+    const kwSet = new Set(baseKw);
 
     let arr = entries.filter((e) => {
-      if (prefs.onlyFavorites && !favIds[e.id]) return false
-      if (prefs.tab !== 'all' && e.type !== prefs.tab) return false
-      const t = `${e.title} ${e.summary} ${e.author} ${e.source}`.toLowerCase()
-      if (ql && !t.includes(ql)) return false
-      if (prefs.onlyKeywordMatches) {
-        const hasKw = [...kwSet].some((k) => t.includes(k))
-        if (!hasKw) return false
-      }
-      return true
-    })
+      if (prefs.onlyFavorites && !favIds[e.id]) return false;
+      if (prefs.tab !== "all" && e.type !== prefs.tab) return false;
 
-    if (prefs.sort === 'relevance') {
-      const weights = new Map<string, number>(baseKw.map((k) => [k, 1]))
+      const t = `${e.title} ${e.summary || ""} ${e.author || ""} ${e.source || ""}`.toLowerCase();
+      if (ql && !t.includes(ql)) return false;
+
+      if (prefs.onlyKeywordMatches) {
+        const hasKw = Array.from(kwSet).some((k) => t.includes(k));
+        if (!hasKw) return false;
+      }
+
+      return true;
+    });
+
+    if (prefs.sort === "relevance") {
       arr = arr
         .map((e) => {
-          const t = `${e.title} ${e.summary}`.toLowerCase()
-          let score = 0
-          weights.forEach((w, k) => {
-            let idx = 0
+          const t = `${e.title} ${e.summary || ""}`.toLowerCase();
+          let score = 0;
+
+          for (const k of baseKw) {
+            let idx = 0;
             while (true) {
-              idx = t.indexOf(k, idx)
-              if (idx === -1) break
-              score += w
-              idx += k.length
+              idx = t.indexOf(k, idx);
+              if (idx === -1) break;
+              score += 1;
+              idx += k.length;
             }
-          })
-          if (ql) {
-            let iq = 0
-            let pos = 0
-            while (true) {
-              pos = t.indexOf(ql, pos)
-              if (pos === -1) break
-              iq += 0.5
-              pos += ql.length
-            }
-            score += iq
           }
-          return { e, score }
+
+          if (ql) {
+            let idx = 0;
+            while (true) {
+              idx = t.indexOf(ql, idx);
+              if (idx === -1) break;
+              score += 0.5;
+              idx += ql.length;
+            }
+          }
+
+          return { e, score };
         })
         .sort((a, b) => b.score - a.score)
-        .map((x) => x.e)
+        .map((x) => x.e);
     }
 
-    return arr
+    return arr;
   }, [
     entries,
     favIds,
@@ -455,560 +356,471 @@ export default function TrackerPage() {
     prefs.sort,
     keywords,
     activeKws,
-  ])
+  ]);
 
   function toggleRead(id: string) {
-    setReadIds((prev) => ({ ...prev, [id]: !prev[id] }))
+    setReadIds((prev) => ({ ...prev, [id]: !prev[id] }));
   }
   function toggleFav(id: string) {
-    setFavIds((prev) => ({ ...prev, [id]: !prev[id] }))
+    setFavIds((prev) => ({ ...prev, [id]: !prev[id] }));
   }
   function addKeyword(k: string) {
-    const key = (k || '').trim()
-    if (!key) return
-    if (!(keywords as string[]).includes(key))
-      setKeywords([...(keywords as string[]), key])
-    setNewKeyword('')
+    const key = (k || "").trim();
+    if (!key || keywords.includes(key)) return;
+    setKeywords([...keywords, key]);
+    setNewKeyword("");
   }
   function removeKeyword(k: string) {
-    setKeywords((keywords as string[]).filter((x) => x !== k))
+    setKeywords(keywords.filter((x) => x !== k));
+    setActiveKws(activeKws.filter((x) => x !== k));
   }
   function toggleActiveKw(k: string) {
-    setActiveKws((prev) =>
-      prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k],
-    )
+    setActiveKws(activeKws.includes(k) ? activeKws.filter((x) => x !== k) : [...activeKws, k]);
   }
   function clearActiveKws() {
-    setActiveKws([])
+    setActiveKws([]);
   }
 
-  const lastRefreshedStr = lastRefreshedRef.current
-    ? lastRefreshedRef.current.toLocaleString()
-    : ''
-
-  // Sidebar sticky offset derived from header height
-  const sidebarTop = Math.max(12, headerH + 16)
-  const sidebarMaxH = `calc(100vh - ${sidebarTop + 12}px)`
-
-  const sidebarWrapperStyle: CSSProperties = {
-    position: 'sticky',
-    top: sidebarTop,
-    maxHeight: sidebarMaxH,
-    overflowY: 'auto',
-    paddingRight: 4,
-  }
+  const lastRefreshed = lastRefreshedRef.current;
 
   return (
-    <div style={styles.page}>
-      <header ref={headerRef as any} style={styles.header}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 22 }}>
-            Track And Explore Cutting-Edge LLM Research
-          </h1>
-          <p style={{ color: '#475569', marginTop: 6, marginBottom: 0 }}>
-            Stay informed on the latest breakthroughs in AI and LLMs, tailored
-            to your keywords and interests. Need task-specific guidance? Our AI
-            chat provides personalized LLM suggestions to support you.
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/30 to-slate-50">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">
+                Feed Tracker
+              </h1>
+              <p className="mt-2 text-slate-600">Track and organize your research feeds with intelligent keyword matching</p>
+            </div>
+            <Button
+              onClick={refreshFeeds}
+              disabled={loading}
+              className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              <RefreshCwIcon className={cn("size-4", loading && "animate-spin")} />
+              Refresh
+            </Button>
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button
-            onClick={refreshFeeds}
-            disabled={loading}
-            style={styles.buttonPrimary}
-          >
-            {loading ? 'Refreshing…' : 'Refresh'}
-          </button>
-          <span style={{ fontSize: 12, color: '#64748b' }}>
-            {lastRefreshedStr && `Last updated: ${lastRefreshedStr}`}
-          </span>
-        </div>
-      </header>
 
-      <div style={styles.grid}>
-        {/* LEFT – filters/keywords/sources */}
-        <aside style={sidebarWrapperStyle}>
-          <div style={styles.sidebar}>
-            {/* Filters */}
-            <section style={styles.card}>
-              <h3 style={styles.cardTitle}>Filters</h3>
-              <div style={{ display: 'grid', gap: 8 }}>
-                <div>
-                  <label style={styles.label}>Type</label>
-                  <select
+        {/* Search Bar */}
+        <div className="mb-8">
+          <div className="relative">
+            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search feeds, keywords, authors..."
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          {/* LEFT SIDEBAR */}
+          <aside className="lg:col-span-3 space-y-6">
+            {/* Filters Card */}
+            <Card className="border-slate-200 shadow-sm hover:shadow-md transition-shadow bg-white/80 backdrop-blur-sm">
+              <CardHeader className="space-y-2">
+                <CardTitle className="flex items-center gap-2 text-emerald-700">
+                  <FilterIcon className="size-5" />
+                  Filters
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Tab Filter */}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700">Content Type</label>
+                  <Tabs
                     value={prefs.tab}
-                    onChange={(e) =>
-                      setPrefs((p: any) => ({
-                        ...p,
-                        tab: (e.target as HTMLSelectElement).value,
-                      }))
-                    }
-                    style={styles.input}
+                    onValueChange={(v) => setPrefs({ ...prefs, tab: v as any })}
+                    className="w-full"
                   >
-                    <option value="all">All</option>
-                    <option value="paper">Papers</option>
-                    <option value="blog">Blogs</option>
-                  </select>
+                    <TabsList className="grid w-full grid-cols-3 bg-slate-100">
+                      <TabsTrigger value="all">All</TabsTrigger>
+                      <TabsTrigger value="paper">Papers</TabsTrigger>
+                      <TabsTrigger value="blog">Blogs</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
                 </div>
-                <div>
-                  <label style={styles.label}>Search</label>
-                  <input
-                    placeholder="Search titles & summaries…"
-                    value={q}
-                    onChange={(e) =>
-                      setQ((e.target as HTMLInputElement).value)
-                    }
-                    style={styles.input}
-                  />
-                </div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <label
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      fontSize: 13,
-                      color: colors.textMain,
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={!!prefs.onlyKeywordMatches}
-                      onChange={(e) =>
-                        setPrefs((p: any) => ({
-                          ...p,
-                          onlyKeywordMatches: (
-                            e.target as HTMLInputElement
-                          ).checked,
-                        }))
-                      }
-                    />
-                    <span> Keywords only</span>
-                  </label>
-                  <label
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      fontSize: 13,
-                      color: colors.textMain,
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={!!prefs.showSummaries}
-                      onChange={(e) =>
-                        setPrefs((p: any) => ({
-                          ...p,
-                          showSummaries: (
-                            e.target as HTMLInputElement
-                          ).checked,
-                        }))
-                      }
-                    />
-                    <span> Show summaries</span>
-                  </label>
-                  <label
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      fontSize: 13,
-                      color: colors.textMain,
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={!!prefs.onlyFavorites}
-                      onChange={(e) =>
-                        setPrefs((p: any) => ({
-                          ...p,
-                          onlyFavorites: (
-                            e.target as HTMLInputElement
-                          ).checked,
-                        }))
-                      }
-                    />
-                    <span> Favorites</span>
-                  </label>
-                </div>
-                <div>
-                  <label style={styles.label}>Sort</label>
+
+                {/* Sort */}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700">Sort By</label>
                   <select
                     value={prefs.sort}
-                    onChange={(e) =>
-                      setPrefs((p: any) => ({
-                        ...p,
-                        sort: (e.target as HTMLSelectElement).value,
-                      }))
-                    }
-                    style={styles.input}
+                    onChange={(e) => setPrefs({ ...prefs, sort: e.target.value as any })}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   >
-                    <option value="newest">Newest</option>
-                    <option value="oldest">Oldest</option>
-                    <option value="relevance">Relevance</option>
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="relevance">Most Relevant</option>
                   </select>
                 </div>
-              </div>
-            </section>
 
-            {/* Tracked keywords */}
-            <section style={styles.card}>
-              <h3 style={styles.cardTitle}>Tracked keywords</h3>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                <input
-                  placeholder="Add a keyword…"
-                  value={newKeyword}
-                  onChange={(e) =>
-                    setNewKeyword((e.target as HTMLInputElement).value)
-                  }
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') addKeyword(newKeyword)
-                  }}
-                  style={styles.input}
-                />
-                <button
-                  onClick={() => addKeyword(newKeyword)}
-                  style={styles.button}
-                >
-                  Add
-                </button>
+                {/* Toggles */}
+                <div className="space-y-2">
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={prefs.onlyKeywordMatches}
+                      onChange={(e) => setPrefs({ ...prefs, onlyKeywordMatches: e.target.checked })}
+                      className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <span className="text-sm text-slate-700 group-hover:text-slate-900">Only keyword matches</span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={prefs.showSummaries}
+                      onChange={(e) => setPrefs({ ...prefs, showSummaries: e.target.checked })}
+                      className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <span className="text-sm text-slate-700 group-hover:text-slate-900">Show summaries</span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={prefs.onlyFavorites}
+                      onChange={(e) => setPrefs({ ...prefs, onlyFavorites: e.target.checked })}
+                      className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <span className="text-sm text-slate-700 group-hover:text-slate-900">Favorites only</span>
+                  </label>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Keywords Card */}
+            <Card className="border-slate-200 shadow-sm hover:shadow-md transition-shadow bg-white/80 backdrop-blur-sm">
+              <CardHeader className="space-y-1">
+                <CardTitle className="flex items-center gap-2 text-emerald-700">
+                  <TagIcon className="size-5" />
+                  Tracked Keywords
+                </CardTitle>
+                <CardDescription>Click to focus. Remove to stop tracking.</CardDescription>
+              </CardHeader>
+
+              <CardContent className="space-y-3">
+                <div className="flex gap-2">
+                  <input
+                    className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    placeholder="Add a keyword…"
+                    value={newKeyword}
+                    onChange={(e) => setNewKeyword(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") addKeyword(newKeyword);
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => addKeyword(newKeyword)}
+                    className="border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
+                  >
+                    Add
+                  </Button>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {keywords.map((k) => {
+                    const selected = activeKws.includes(k);
+                    return (
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={() => toggleActiveKw(k)}
+                        className={cn(
+                          "group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-all",
+                          "hover:shadow-sm",
+                          selected
+                            ? "border-emerald-300 bg-emerald-50 text-emerald-700 shadow-sm"
+                            : "border-slate-200 bg-white text-slate-700 hover:border-emerald-200 hover:bg-emerald-50/50"
+                        )}
+                      >
+                        <span className="truncate">{k}</span>
+                        <span
+                          className="rounded-full p-0.5 text-slate-400 hover:text-slate-600 group-hover:text-emerald-600 transition-colors"
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            removeKeyword(k);
+                          }}
+                          title="Remove keyword"
+                        >
+                          <XIcon className="size-3" />
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
                 {!!activeKws.length && (
-                  <button onClick={clearActiveKws} style={styles.button}>
-                    Clear
-                  </button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearActiveKws}
+                    className="w-full text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                  >
+                    Clear filters
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Stats Card */}
+            <Card className="border-slate-200 shadow-sm bg-gradient-to-br from-emerald-50 to-emerald-50/50">
+              <CardContent className="pt-6">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-600">Total Items</span>
+                    <span className="text-2xl font-bold text-emerald-700">{entries.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-600">Favorites</span>
+                    <span className="text-lg font-semibold text-emerald-600">{Object.keys(favIds).length}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-600">Read</span>
+                    <span className="text-lg font-semibold text-emerald-600">{Object.keys(readIds).length}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </aside>
+
+          {/* RIGHT MAIN CONTENT */}
+          <main className="lg:col-span-9 space-y-6">
+            {error && (
+              <div className="rounded-xl border border-red-200 bg-red-50/50 p-4 text-sm text-red-700 flex items-center gap-3">
+                <div className="size-2 rounded-full bg-red-500" />
+                {error}
+              </div>
+            )}
+
+            {/* Feed Grid */}
+            {loading ? (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-64 animate-pulse rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-100 to-slate-50"
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {filtered.map((e) => (
+                  <EnhancedFeedCard
+                    key={e.id}
+                    item={e}
+                    read={!!readIds[e.id]}
+                    fav={!!favIds[e.id]}
+                    toggleRead={() => toggleRead(e.id)}
+                    toggleFav={() => toggleFav(e.id)}
+                    kwLower={kwLower}
+                    showSummaries={prefs.showSummaries}
+                  />
+                ))}
+
+                {!filtered.length && (
+                  <div className="col-span-full">
+                    <Card className="border-slate-200 bg-slate-50/50">
+                      <CardContent className="py-12 text-center">
+                        <Sparkles className="size-8 text-slate-300 mx-auto mb-3" />
+                        <p className="text-sm text-slate-500">No items match your filters.</p>
+                      </CardContent>
+                    </Card>
+                  </div>
                 )}
               </div>
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 6,
-                  flexWrap: 'wrap',
-                  maxHeight: 220,
-                  overflowY: 'auto',
-                  paddingRight: 4,
-                }}
-              >
-                {(keywords as string[]).map((k) => {
-                  const selected = activeKws.includes(k)
-                  return (
-                    <span
-                      key={k}
-                      style={{
-                        ...styles.pill,
-                        background: selected
-                          ? colors.accentEmeraldSoft
-                          : '#f1f5f9',
-                        borderColor: selected
-                          ? colors.accentEmerald
-                          : '#e2e8f0',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 6,
-                      }}
-                    >
-                      <button
-                        onClick={() => toggleActiveKw(k)}
-                        style={{
-                          border: 'none',
-                          background: 'transparent',
-                          cursor: 'pointer',
-                          color: colors.textMain,
-                          fontSize: 12,
-                        }}
-                      >
-                        {k}
-                      </button>
-                      <button
-                        onClick={(ev) => {
-                          ev.stopPropagation()
-                          removeKeyword(k)
-                        }}
-                        title="Remove"
-                        style={{
-                          border: 'none',
-                          background: 'transparent',
-                          cursor: 'pointer',
-                          color: '#64748b',
-                          fontSize: 12,
-                        }}
-                      >
-                        ×
-                      </button>
-                    </span>
-                  )
-                })}
-              </div>
-            </section>
+            )}
 
-            {/* Sources */}
-            <section style={styles.card}>
-              <h3 style={styles.cardTitle}>Sources</h3>
-              <div style={styles.info}>
-                Sources are now <b>managed on the server</b>. The list here is
-                informational only. If you want a UI to manage server-side
-                sources later, we can add an admin screen.
-              </div>
-            </section>
-          </div>
-        </aside>
-
-        {/* RIGHT - feed + finance trends */}
-        <main>
-          {error && <div style={styles.error}>{error}</div>}
-          {loading ? (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: 12,
-                marginTop: 0,
-              }}
-            >
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  style={{
-                    ...feedCardStyle,
-                    background:
-                      'linear-gradient(90deg,#f3f4f6 20%, #e5e7eb 40%, #f3f4f6 60%)',
-                    backgroundSize: '200% 100%',
-                    animation: 'shimmer 1.2s infinite',
-                  }}
-                />
-              ))}
-            </div>
-          ) : (
-            <FeedList
-              items={filtered}
-              readIds={readIds}
-              favIds={favIds}
-              toggleRead={toggleRead}
-              toggleFav={toggleFav}
-              keywords={keywords as string[]}
-              showSummaries={!!prefs.showSummaries}
-            />
-          )}
-
-          {!!financeTrends.length && (
-            <div style={{ marginTop: 16 }}>
-              <div style={styles.card}>
-                <h3 style={{ ...styles.cardTitle, marginBottom: 12 }}>
-                  Finance trends (7d vs prior 7d)
-                </h3>
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns:
-                      'repeat(auto-fit,minmax(160px,1fr))',
-                    gap: 8,
-                  }}
-                >
-                  {financeTrends.map((t) => (
-                    <div
-                      key={t.term}
-                      style={{
-                        border: `1px solid ${colors.cardBorder}`,
-                        borderRadius: 14,
-                        padding: 8,
-                        background: colors.cardBg,
-                      }}
-                    >
+            {/* Trends */}
+            {!!financeTrends.length && (
+              <Card className="border-slate-200 shadow-sm bg-white/80 backdrop-blur-sm">
+                <CardHeader className="space-y-1">
+                  <CardTitle className="flex items-center gap-2 text-emerald-700">
+                    <TrendingUpIcon className="size-5" />
+                    Finance Trends
+                  </CardTitle>
+                  <CardDescription>7d vs prior 7d mentions in your feed.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                    {financeTrends.map((t) => (
                       <div
-                        style={{
-                          fontWeight: 600,
-                          textTransform: 'capitalize',
-                          fontSize: 13,
-                        }}
+                        key={t.term}
+                        className="rounded-xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 hover:shadow-md transition-shadow"
                       >
-                        {t.term}
+                        <div className="text-sm font-semibold text-slate-900 capitalize">{t.term}</div>
+                        <div className="mt-2 text-xs text-slate-500">
+                          Now <span className="font-semibold text-slate-700">{t.now}</span> • Prev <span className="font-semibold text-slate-700">{t.prev}</span>
+                        </div>
+                        <div
+                          className={cn(
+                            "mt-3 flex items-center gap-1 text-sm font-bold",
+                            t.change >= 0 ? "text-emerald-600" : "text-red-600"
+                          )}
+                        >
+                          {t.change >= 0 ? (
+                            <ArrowUpRight className="size-4" />
+                          ) : (
+                            <ArrowDownRight className="size-4" />
+                          )}
+                          {Math.abs(t.change)}
+                        </div>
                       </div>
-                      <div style={{ fontSize: 12, color: '#64748b' }}>
-                        Now {t.now} • Prev {t.prev}
-                      </div>
-                      <div
-                        style={{
-                          marginTop: 4,
-                          fontSize: 12,
-                          color: t.change >= 0 ? '#16a34a' : '#b91c1c',
-                        }}
-                      >
-                        {t.change >= 0 ? '+' : ''}
-                        {t.change}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </main>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </main>
+        </div>
       </div>
     </div>
-  )
+  );
 }
 
-/* ---------- helpers for feed list ---------- */
+/* ---------- Enhanced Feed Card Component ---------- */
 
-function stripHtml(html: string) {
-  const div = document.createElement('div')
-  div.innerHTML = html
-  return (div.textContent || div.innerText || '').trim()
-}
-
-function highlightKeywords(text: string, kwsLower: string[]) {
-  if (!text) return null
-  const lower = text.toLowerCase()
-  const ranges: Array<[number, number]> = []
-  kwsLower.forEach((k) => {
-    if (!k) return
-    let idx = 0
-    while (true) {
-      idx = lower.indexOf(k, idx)
-      if (idx === -1) break
-      ranges.push([idx, idx + k.length])
-      idx += k.length
-    }
-  })
-  if (!ranges.length) return text
-  ranges.sort((a, b) => a[0] - b[0])
-  const merged: Array<[number, number]> = []
-  for (const [s, e] of ranges) {
-    if (!merged.length || s > merged[merged.length - 1][1]) {
-      merged.push([s, e])
-    } else {
-      merged[merged.length - 1][1] = Math.max(
-        merged[merged.length - 1][1],
-        e,
-      )
-    }
-  }
-  const parts: any[] = []
-  let prev = 0
-  merged.forEach(([s, e], i) => {
-    if (s > prev) parts.push(text.slice(prev, s))
-    parts.push(
-      <mark
-        key={i}
-        style={{
-          background: '#fde68a',
-          borderRadius: 4,
-          padding: '0 2px',
-        }}
-      >
-        {text.slice(s, e)}
-      </mark>,
-    )
-    prev = e
-  })
-  if (prev < text.length) parts.push(text.slice(prev))
-  return <>{parts}</>
-}
-
-function FeedList({
-  items,
-  readIds,
-  favIds,
+function EnhancedFeedCard({
+  item,
+  read,
+  fav,
   toggleRead,
   toggleFav,
-  keywords,
+  kwLower,
   showSummaries,
-}: any) {
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const [cols, setCols] = useState(2)
-
-  useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    const ro = new ResizeObserver(() => {
-      const w = el.clientWidth
-      setCols(w < 780 ? 1 : 2)
-    })
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
-
-  const kwLower = useMemo(
-    () => (keywords as string[]).map((k) => k.toLowerCase()),
-    [keywords],
-  )
-
-  if (!items || !items.length) {
-    return (
-      <div style={styles.card}>
-        <div style={{ color: colors.textMuted }}>No items yet. Try Refresh.</div>
-      </div>
-    )
-  }
+}: {
+  item: FeedItem;
+  read: boolean;
+  fav: boolean;
+  toggleRead: () => void;
+  toggleFav: () => void;
+  kwLower: string[];
+  showSummaries: boolean;
+}) {
+  const title = item.title || "";
+  const summary = item.summary ? stripHtml(item.summary) : "";
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        ...styles.feedGrid,
-        gridTemplateColumns: cols === 1 ? '1fr' : '1fr 1fr',
-        alignItems: 'stretch',
-        marginTop: 0,
-      }}
+    <Card
+      className={cn(
+        "rounded-2xl border-slate-200 overflow-hidden transition-all duration-300",
+        "hover:shadow-lg hover:border-emerald-300 hover:scale-105",
+        "bg-gradient-to-br from-white to-slate-50",
+        read && "opacity-75"
+      )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      {items.map((e: any) => (
-        <div
-          key={e.id}
-          style={{
-            ...feedCardStyle,
-            opacity: readIds[e.id] ? 0.85 : 1,
-          }}
-        >
-          <div style={feedTitleRow}>
-            <div
-              style={{
-                ...feedTitleText,
-                color: readIds[e.id] ? colors.accentEmerald : colors.textMain,
-              }}
-            >
-              {highlightKeywords(e.title, kwLower)}
+      <CardContent className="pt-6">
+        <div className="flex items-start justify-between gap-3">
+          {/* Content */}
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+              {item.source || "Source"} • {timeSince(item.date)}
+              {item.author ? ` • ${item.author}` : ""}
             </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button onClick={() => toggleRead(e.id)} style={styles.textButton}>
-                {readIds[e.id] ? 'Unread' : 'Read'}
-              </button>
+
+            <div className="mt-3 line-clamp-2 text-lg font-bold text-slate-900 leading-tight">
+              {highlightKeywords(title, kwLower)}
+            </div>
+
+            {showSummaries && summary && (
+              <p className="mt-2 line-clamp-3 text-sm text-slate-600 leading-relaxed">
+                {highlightKeywords(summary, kwLower)}
+              </p>
+            )}
+
+            {/* Badges */}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Badge className="rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors">
+                {item.type || "Feed"}
+              </Badge>
+              {fav && (
+                <Badge className="rounded-full bg-amber-100 text-amber-700">
+                  ⭐ Favorite
+                </Badge>
+              )}
+              {read && (
+                <Badge variant="outline" className="rounded-full border-emerald-200 text-emerald-700">
+                  ✓ Read
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className={cn(
+            "flex shrink-0 flex-col items-end gap-2 transition-all duration-300",
+            isHovered ? "opacity-100" : "opacity-60"
+          )}>
+            <button
+              type="button"
+              onClick={toggleFav}
+              className={cn(
+                "rounded-full border px-3 py-2 text-xs font-medium transition-all duration-200",
+                "hover:shadow-md",
+                fav
+                  ? "border-amber-300 bg-amber-50 text-amber-700"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-amber-200 hover:bg-amber-50"
+              )}
+              title="Favorite"
+            >
+              <StarIcon className={cn("mr-1 inline size-3.5", fav && "fill-current")} />
+              {fav ? "Starred" : "Star"}
+            </button>
+
+            <button
+              type="button"
+              onClick={toggleRead}
+              className={cn(
+                "rounded-full border px-3 py-2 text-xs font-medium transition-all duration-200",
+                "hover:shadow-md",
+                read
+                  ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-emerald-200 hover:bg-emerald-50"
+              )}
+              title="Mark read/unread"
+            >
+              {read ? (
+                <>
+                  <CheckCircle2Icon className="mr-1 inline size-3.5" />
+                  Read
+                </>
+              ) : (
+                <>
+                  <CircleIcon className="mr-1 inline size-3.5" />
+                  Unread
+                </>
+              )}
+            </button>
+
+            {item.link && (
               <a
-                href={e.link}
+                className={cn(
+                  "rounded-full border px-3 py-2 text-xs font-medium transition-all duration-200",
+                  "hover:shadow-md",
+                  "border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-blue-50"
+                )}
+                href={item.link}
                 target="_blank"
                 rel="noreferrer"
-                style={styles.textButton}
+                title="Open original"
               >
+                <ExternalLinkIcon className="mr-1 inline size-3.5" />
                 Open
               </a>
-              <button
-                title="Favorite"
-                onClick={() => toggleFav(e.id)}
-                style={styles.textButton}
-              >
-                {favIds[e.id] ? '★' : '☆'}
-              </button>
-            </div>
-          </div>
-
-          <div style={feedMetaText}>
-            <span>{e.source}</span>
-            <span> • </span>
-            <span>{timeSince(e.date)}</span>
-            {e.author && (
-              <>
-                <span> • </span>
-                <span title={e.author}>{e.author}</span>
-              </>
             )}
           </div>
-
-          {showSummaries && e.summary && (
-            <div style={feedSummaryText}>
-              {highlightKeywords(stripHtml(e.summary), kwLower)}
-            </div>
-          )}
         </div>
-      ))}
-    </div>
-  )
+      </CardContent>
+    </Card>
+  );
 }

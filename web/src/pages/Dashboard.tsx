@@ -1,28 +1,30 @@
-import { useEffect, useState, type CSSProperties } from 'react'
-import { pageShell, card, primaryButton, colors } from '@/ui/styles'
+// web/src/pages/Dashboard.tsx
+import { useEffect, useState } from 'react'
+import { RotateCcw, Trash2, Download, Copy, CheckCircle2, AlertCircle } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { api } from '@/lib/api'
 
 type SavedDashboardItem = {
-  id: number;          // SavedRecommendation id
-  createdAt: string;
-  eventId: number;
-  title: string | null;
-  notes: string | null;
+  id: number
+  createdAt: string
+  eventId: number
+  title: string | null
+  notes: string | null
 
-  task: string;
-  privacy: string;
-  latency: number;
-  context: number;
+  task: string
+  privacy: string
+  latency: number
+  context: number
 
-  topModelName: string | null;
-  topModelProvider: string | null;
-  confidence: number | null;
-};
-
+  topModelName: string | null
+  topModelProvider: string | null
+  confidence: number | null
+}
 
 type SavedResponse = {
   ok: boolean
   items: SavedDashboardItem[]
+  error?: string
 }
 
 export default function Dashboard() {
@@ -31,6 +33,7 @@ export default function Dashboard() {
   const [error, setError] = useState<string>('')
 
   const [notesMap, setNotesMap] = useState<Record<number, string>>({})
+  const [copied, setCopied] = useState<number | null>(null)
 
   useEffect(() => {
     void load()
@@ -41,21 +44,17 @@ export default function Dashboard() {
       setLoading(true)
       setError('')
 
-      const data = await api<SavedResponse>('/recommendations/saved', {
-        method: 'GET',
-      })
+      const data = await api<SavedResponse>('/recommendations/saved', { method: 'GET' })
+      if (!data.ok) throw new Error(data.error || 'Failed to load saved dashboards')
 
-      if (!data.ok) throw new Error('Failed to load saved dashboards')
-
-      setItems(data.items ?? [])
+      const nextItems = data.items ?? []
+      setItems(nextItems)
 
       const initialNotes: Record<number, string> = {}
-      for (const it of data.items ?? []) {
-        initialNotes[it.id] = it.notes ?? ''
-      }
+      for (const it of nextItems) initialNotes[it.id] = it.notes ?? ''
       setNotesMap(initialNotes)
     } catch (e: any) {
-      setError(e.message || 'Error')
+      setError(e?.message || 'Error loading dashboard')
     } finally {
       setLoading(false)
     }
@@ -84,9 +83,7 @@ export default function Dashboard() {
       `Latency target: ${item.latency} ms`,
       `Context needed: ${item.context.toLocaleString()} tokens`,
       `Top model: ${item.topModelName ?? '—'} (${item.topModelProvider ?? 'Unknown'})`,
-      `Confidence: ${
-        item.confidence != null ? item.confidence.toFixed(2) : '—'
-      }`,
+      `Confidence: ${item.confidence != null ? item.confidence.toFixed(2) : '—'}`,
       notesMap[item.id] ? `Notes: ${notesMap[item.id]}` : '',
     ]
       .filter(Boolean)
@@ -94,7 +91,8 @@ export default function Dashboard() {
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       void navigator.clipboard.writeText(rationale)
-      alert('Rationale copied to clipboard')
+      setCopied(item.id)
+      window.setTimeout(() => setCopied(null), 2000)
     } else {
       alert('Clipboard not available in this browser')
     }
@@ -106,10 +104,15 @@ export default function Dashboard() {
 
   async function removeCard(id: number) {
     try {
-      await api<{ ok: boolean }>(`/recommendations/saved/${id}`, {
-        method: 'DELETE',
-      })
+      await api<{ ok: boolean }>(`/recommendations/saved/${id}`, { method: 'DELETE' })
       setItems((prev) => prev.filter((x) => x.id !== id))
+
+      // keep notesMap tidy (optional)
+      setNotesMap((prev) => {
+        const next = { ...prev }
+        delete next[id]
+        return next
+      })
     } catch (e) {
       console.error('failed to delete card', e)
     }
@@ -118,68 +121,61 @@ export default function Dashboard() {
   const savedCount = items.length
 
   return (
-    <div style={pageStyle}>
-      <div style={cardStyle}>
-        <div style={{ marginBottom: 12 }}>
-          <h2
-            style={{
-              margin: 0,
-              fontSize: 20,
-              fontWeight: 700,
-              color: colors.textMain,
-            }}
-          >
-            Dashboard
-          </h2>
-          <p
-            style={{
-              marginTop: 6,
-              marginBottom: 0,
-              fontSize: 14,
-              color: colors.textMuted,
-            }}
-          >
-            Your saved LLM Advisor dashboards. Use the <b>Save</b> button on a
-            recommendation to pin it here.
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/20 to-slate-50 py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-4xl font-bold text-slate-900 mb-2">Dashboard</h1>
+              <p className="text-slate-600 text-sm max-w-2xl">
+                Your saved LLM Advisor dashboards. Use the{' '}
+                <span className="font-semibold text-emerald-700">Save</span> button on a recommendation to pin it here.
+              </p>
+            </div>
+
+            <button
+              onClick={() => void load()}
+              disabled={loading}
+              type="button"
+              className={cn(
+                'flex items-center gap-2 px-4 py-2 rounded-full font-semibold transition-all duration-200',
+                loading
+                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 shadow-sm',
+              )}
+            >
+              <RotateCcw className="w-4 h-4" />
+              {loading ? 'Refreshing…' : 'Refresh'}
+            </button>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm font-medium flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              <div>{error}</div>
+            </div>
+          )}
+
+          {/* Empty */}
+          {!loading && !error && items.length === 0 && (
+            <div className="p-6 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 text-sm">
+              <p>
+                No saved dashboards yet. In the{' '}
+                <span className="font-semibold text-slate-900">Recommend</span> tab, click{' '}
+                <span className="font-semibold text-emerald-700">Save</span> on a model to add it here.
+              </p>
+            </div>
+          )}
         </div>
 
-        <button
-          onClick={load}
-          disabled={loading}
-          style={{
-            ...secondaryRefreshButton,
-            opacity: loading ? 0.7 : 1,
-            cursor: loading ? 'default' : 'pointer',
-          }}
-        >
-          {loading ? 'Refreshing…' : 'Refresh'}
-        </button>
-
-        {error && <div style={errorBox}>{error}</div>}
-
-        {!loading && !error && items.length === 0 && (
-          <div
-            style={{
-              fontSize: 13,
-              color: colors.textMuted,
-              marginTop: 8,
-            }}
-          >
-            No saved dashboards yet. In the <b>Recommend</b> tab, click
-            &nbsp;<b>Save</b> on a model to add it here.
-          </div>
-        )}
-
-        <div style={{ display: 'grid', gap: 14, marginTop: 10 }}>
+        {/* Cards */}
+        <div className="space-y-6">
           {items.map((item) => {
             const created = new Date(item.createdAt)
             const dateStr = created.toLocaleString()
-            const score =
-              item.confidence != null
-                ? item.confidence.toFixed(2)
-                : '—'
-
+            const score = item.confidence != null ? item.confidence.toFixed(2) : '—'
             const noteVal = notesMap[item.id] ?? ''
 
             const constraints = [
@@ -191,182 +187,200 @@ export default function Dashboard() {
               .join('; ')
 
             return (
-              <div key={item.id} style={dashboardCard}>
-                {/* LEFT COLUMN – Task / Constraints / History / Saved */}
-                <div style={leftCol}>
-                  <div style={smallMeta}>Saved at: {dateStr}</div>
+              <div
+                key={item.id}
+                className="bg-white rounded-2xl border border-slate-200 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-8">
+                  {/* LEFT */}
+                  <div className="lg:border-r border-slate-200 lg:pr-6 space-y-6">
+                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      Saved {dateStr}
+                    </div>
 
-                  <h3 style={sectionTitle}>Task</h3>
-                  <p style={sectionBody}>{item.task || '—'}</p>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 mb-2">Task</h3>
+                      <p className="text-sm text-slate-600 leading-relaxed">{item.task || '—'}</p>
+                    </div>
 
-                  <h3 style={sectionTitle}>Constraints</h3>
-                  <p style={sectionBody}>{constraints || '—'}</p>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 mb-2">Constraints</h3>
+                      <p className="text-sm text-slate-600 leading-relaxed">{constraints || '—'}</p>
+                    </div>
 
-                  <h3 style={sectionTitle}>History</h3>
-                  <p style={sectionBody}>—</p>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 mb-2">Total Saved</h3>
+                      <p className="text-sm text-slate-600">{savedCount === 1 ? '1 item' : `${savedCount} items`}</p>
+                    </div>
+                  </div>
 
-                  <h3 style={sectionTitle}>Saved</h3>
-                  <p style={sectionBody}>
-                    {savedCount === 1 ? '1 item' : `${savedCount} items`}
-                  </p>
-                </div>
-
-                {/* MIDDLE COLUMN – Recommended model + Evidence summary */}
-                <div style={middleCol}>
-                  <div style={{ marginBottom: 10 }}>
-                    <div style={middleHeader}>
-                      <div>
-                        <div style={middleTitle}>
-                          Recommended:{' '}
-                          {item.topModelName ?? '—'}
-                          {item.topModelProvider
-                            ? ` (${item.topModelProvider})`
-                            : ''}
+                  {/* MIDDLE */}
+                  <div className="lg:border-r border-slate-200 lg:pr-6 space-y-6">
+                    <div className="bg-gradient-to-br from-emerald-50 to-emerald-50/50 rounded-xl p-4 border border-emerald-200">
+                      <div className="flex items-start justify-between gap-4 mb-4">
+                        <div>
+                          <div className="text-xs font-semibold text-emerald-700 uppercase tracking-wider mb-1">
+                            Recommended
+                          </div>
+                          <div className="text-lg font-bold text-emerald-900">
+                            {item.topModelName ?? '—'}
+                            {item.topModelProvider ? ` (${item.topModelProvider})` : ''}
+                          </div>
+                          <div className="text-xs text-emerald-700 mt-1">Privacy: {item.privacy || '—'}</div>
                         </div>
-                        <div style={middleSub}>
-                          Privacy: {item.privacy || '—'}
+                        <div className="text-right">
+                          <div className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Score</div>
+                          <div className="text-2xl font-bold text-emerald-900">{score}</div>
                         </div>
                       </div>
-                      <div style={middleScoreBlock}>
-                        <div style={middleScoreLabel}>Score</div>
-                        <div style={middleScoreValue}>{score}</div>
+
+                      <div className="space-y-2 text-sm">
+                        <p className="text-slate-700">
+                          <span className="font-semibold">Pros:</span> —
+                        </p>
+                        <p className="text-slate-700">
+                          <span className="font-semibold">Cons:</span> —
+                        </p>
+                        <p className="text-slate-700">
+                          <span className="font-semibold">Cost &amp; Latency:</span> $0 per 1M tokens (compute only);
+                          target {item.latency ? `${item.latency} ms` : '—'}
+                        </p>
+                        <p className="text-slate-700">
+                          <span className="font-semibold">RAG tip:</span> —
+                        </p>
+                        <p className="text-slate-700">
+                          <span className="font-semibold">Sources:</span> —
+                        </p>
                       </div>
                     </div>
 
-                    <p style={summaryLine}>
-                      <b>Pros:</b> —
-                    </p>
-                    <p style={summaryLine}>
-                      <b>Cons:</b> —
-                    </p>
-                    <p style={summaryLine}>
-                      <b>Cost &amp; Latency:</b> $
-                      0 per 1M tokens (compute only); target{' '}
-                      {item.latency ? `${item.latency} ms` : '—'}
-                    </p>
-                    <p style={summaryLine}>
-                      <b>RAG tip:</b> —
-                    </p>
-                    <p style={summaryLine}>
-                      <b>Sources:</b> —
-                    </p>
-                  </div>
+                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                      <h4 className="text-sm font-bold text-slate-900 mb-1">Evidence Summary</h4>
+                      <p className="text-xs text-slate-600 mb-4">Benchmarks, metadata, and popularity for this task.</p>
 
-                  {/* Evidence summary */}
-                  <div style={evidenceBox}>
-                    <div style={evidenceTitle}>Evidence summary</div>
-                    <div style={evidenceSubtitle}>
-                      Benchmarks, metadata, and popularity for this task.
-                    </div>
-
-                    <table style={evidenceTable}>
-                      <thead>
-                        <tr>
-                          <th>Model</th>
-                          <th>TaskFit</th>
-                          <th>Cost $/1M</th>
-                          <th>Latency</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>{item.topModelName ?? '—'}</td>
-                          <td>—</td>
-                          <td>—</td>
-                          <td>
-                            {item.latency ? `${item.latency} ms` : '—'}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>—</td>
-                          <td>—</td>
-                          <td>—</td>
-                          <td>—</td>
-                        </tr>
-                        <tr>
-                          <td>—</td>
-                          <td>—</td>
-                          <td>—</td>
-                          <td>—</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* RIGHT COLUMN – Compare / Actions / Notes / Context limits */}
-                <div style={rightCol}>
-                  <div style={rightSection}>
-                    <div style={sectionTitle}>Compare</div>
-                    <ul style={compareList}>
-                      <li>
-                        <label>
-                          <input type="checkbox" defaultChecked />{' '}
-                          {item.topModelName ?? 'Top model'} — score {score}
-                        </label>
-                      </li>
-                      <li>
-                        <label>
-                          <input type="checkbox" /> (slot 2) — score —
-                        </label>
-                      </li>
-                      <li>
-                        <label>
-                          <input type="checkbox" /> (slot 3) — score —
-                        </label>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div style={rightSection}>
-                    <div style={sectionTitle}>Actions</div>
-                    <div style={{ display: 'grid', gap: 6 }}>
-                      <button
-                        type="button"
-                        style={smallActionButton}
-                        onClick={() => removeCard(item.id)}
-                      >
-                        Remove from dashboard
-                      </button>
-                      <button
-                        type="button"
-                        style={smallActionButton}
-                        onClick={exportPdfPlaceholder}
-                      >
-                        Export PDF
-                      </button>
-                      <button
-                        type="button"
-                        style={smallActionButton}
-                        onClick={() => copyRationale(item)}
-                      >
-                        Copy rationale
-                      </button>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr className="border-b border-slate-300">
+                              <th className="text-left py-2 px-2 font-semibold text-slate-700">Model</th>
+                              <th className="text-left py-2 px-2 font-semibold text-slate-700">TaskFit</th>
+                              <th className="text-left py-2 px-2 font-semibold text-slate-700">Cost $/1M</th>
+                              <th className="text-left py-2 px-2 font-semibold text-slate-700">Latency</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-200">
+                            <tr>
+                              <td className="py-2 px-2 text-slate-900">{item.topModelName ?? '—'}</td>
+                              <td className="py-2 px-2 text-slate-600">—</td>
+                              <td className="py-2 px-2 text-slate-600">—</td>
+                              <td className="py-2 px-2 text-slate-600">{item.latency ? `${item.latency} ms` : '—'}</td>
+                            </tr>
+                            <tr>
+                              <td className="py-2 px-2 text-slate-900">—</td>
+                              <td className="py-2 px-2 text-slate-600">—</td>
+                              <td className="py-2 px-2 text-slate-600">—</td>
+                              <td className="py-2 px-2 text-slate-600">—</td>
+                            </tr>
+                            <tr>
+                              <td className="py-2 px-2 text-slate-900">—</td>
+                              <td className="py-2 px-2 text-slate-600">—</td>
+                              <td className="py-2 px-2 text-slate-600">—</td>
+                              <td className="py-2 px-2 text-slate-600">—</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   </div>
 
-                  <div style={rightSection}>
-                    <div style={sectionTitle}>Notes</div>
-                    <textarea
-                      style={notesArea}
-                      placeholder="Add a comment for audit trail…"
-                      value={noteVal}
-                      onChange={(e) =>
-                        handleNoteChange(item.id, e.target.value)
-                      }
-                      onBlur={() => void persistNote(item.id)}
-                    />
-                  </div>
+                  {/* RIGHT */}
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 mb-3">Compare</h3>
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 hover:text-emerald-700 transition-colors">
+                          <input type="checkbox" defaultChecked className="w-4 h-4 rounded border-slate-300" />
+                          <span>
+                            {item.topModelName ?? 'Top model'} — score {score}
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 hover:text-emerald-700 transition-colors">
+                          <input type="checkbox" className="w-4 h-4 rounded border-slate-300" />
+                          <span>(slot 2) — score —</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 hover:text-emerald-700 transition-colors">
+                          <input type="checkbox" className="w-4 h-4 rounded border-slate-300" />
+                          <span>(slot 3) — score —</span>
+                        </label>
+                      </div>
+                    </div>
 
-                  <div style={rightSection}>
-                    <div style={sectionTitle}>Context limits</div>
-                    <ul style={compareList}>
-                      <li>
-                        Top model: {item.context.toLocaleString()} tokens
-                      </li>
-                      <li>Slot 2: —</li>
-                      <li>Slot 3: —</li>
-                    </ul>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 mb-3">Actions</h3>
+                      <div className="space-y-2">
+                        <button
+                          type="button"
+                          onClick={() => void removeCard(item.id)}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 font-semibold text-sm hover:bg-red-100 transition-all duration-200"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Remove
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={exportPdfPlaceholder}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 font-semibold text-sm hover:bg-blue-100 transition-all duration-200"
+                        >
+                          <Download className="w-4 h-4" />
+                          Export PDF
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => copyRationale(item)}
+                          className={cn(
+                            'w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200',
+                            copied === item.id
+                              ? 'bg-emerald-100 border border-emerald-300 text-emerald-700'
+                              : 'bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100',
+                          )}
+                        >
+                          {copied === item.id ? (
+                            <>
+                              <CheckCircle2 className="w-4 h-4" />
+                              Copied!
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-4 h-4" />
+                              Copy Rationale
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 mb-3">Notes</h3>
+                      <textarea
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
+                        placeholder="Add a comment for audit trail…"
+                        rows={4}
+                        value={noteVal}
+                        onChange={(e) => handleNoteChange(item.id, e.target.value)}
+                        onBlur={() => void persistNote(item.id)}
+                      />
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 mb-3">Context Limits</h3>
+                      <ul className="space-y-1 text-sm text-slate-700">
+                        <li>• Top model: {item.context.toLocaleString()} tokens</li>
+                        <li>• Slot 2: —</li>
+                        <li>• Slot 3: —</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -376,188 +390,4 @@ export default function Dashboard() {
       </div>
     </div>
   )
-}
-
-/* ---------- styles ---------- */
-
-const pageStyle: CSSProperties = {
-  ...pageShell,
-  justifyContent: 'center',
-  alignItems: 'flex-start',
-  padding: '24px 16px',
-}
-
-const cardStyle: CSSProperties = {
-  ...card,
-  width: '100%',
-  maxWidth: 1200,
-  maxHeight: 'none',
-  overflow: 'visible',
-}
-
-const secondaryRefreshButton: CSSProperties = {
-  padding: '6px 14px',
-  borderRadius: 999,
-  border: `1px solid ${colors.borderSubtle}`,
-  background: colors.white,
-  cursor: 'pointer',
-  marginBottom: 12,
-  fontSize: 13,
-  color: colors.textMain,
-}
-
-const errorBox: CSSProperties = {
-  color: colors.danger,
-  background: colors.dangerSoft,
-  border: `1px solid ${colors.dangerBorder}`,
-  padding: 10,
-  borderRadius: 8,
-  marginBottom: 10,
-  fontSize: 13,
-}
-
-/* Dashboard card layout */
-
-const dashboardCard: CSSProperties = {
-  padding: 16,
-  borderRadius: 16,
-  border: `1px solid ${colors.borderSubtle}`,
-  background: colors.white,
-  display: 'grid',
-  gridTemplateColumns: '260px minmax(0, 1fr) 260px',
-  gap: 16,
-}
-
-const smallMeta: CSSProperties = {
-  fontSize: 11,
-  color: colors.textMuted,
-  marginBottom: 8,
-}
-
-const leftCol: CSSProperties = {
-  borderRight: `1px solid ${colors.borderSubtle}`,
-  paddingRight: 12,
-}
-
-const middleCol: CSSProperties = {
-  paddingRight: 12,
-  borderRight: `1px solid ${colors.borderSubtle}`,
-}
-
-const rightCol: CSSProperties = {
-  display: 'grid',
-  gap: 10,
-}
-
-const sectionTitle: CSSProperties = {
-  fontSize: 13,
-  fontWeight: 700,
-  margin: '6px 0 2px',
-  color: colors.textMain,
-}
-
-const sectionBody: CSSProperties = {
-  margin: 0,
-  fontSize: 13,
-  color: colors.textMain,
-  lineHeight: 1.4,
-}
-
-const middleHeader: CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'flex-start',
-  gap: 8,
-  marginBottom: 4,
-}
-
-const middleTitle: CSSProperties = {
-  fontSize: 14,
-  fontWeight: 700,
-  color: colors.textMain,
-}
-
-const middleSub: CSSProperties = {
-  fontSize: 12,
-  color: colors.textMuted,
-}
-
-const middleScoreBlock: CSSProperties = {
-  textAlign: 'right',
-}
-
-const middleScoreLabel: CSSProperties = {
-  fontSize: 11,
-  color: colors.textMuted,
-}
-
-const middleScoreValue: CSSProperties = {
-  fontSize: 16,
-  fontWeight: 700,
-  color: colors.textMain,
-}
-
-const summaryLine: CSSProperties = {
-  margin: '2px 0',
-  fontSize: 12,
-  color: colors.textMain,
-}
-
-/* Evidence summary */
-
-const evidenceBox: CSSProperties = {
-  marginTop: 10,
-  padding: 10,
-  borderRadius: 10,
-  border: `1px solid ${colors.borderSubtle}`,
-  background: '#f9fafb',
-}
-
-const evidenceTitle: CSSProperties = {
-  fontSize: 13,
-  fontWeight: 700,
-  marginBottom: 2,
-}
-
-const evidenceSubtitle: CSSProperties = {
-  fontSize: 11,
-  color: colors.textMuted,
-  marginBottom: 6,
-}
-
-const evidenceTable: CSSProperties = {
-  width: '100%',
-  borderCollapse: 'collapse',
-  fontSize: 11,
-}
-
-const rightSection: CSSProperties = {
-  fontSize: 12,
-}
-
-const compareList: CSSProperties = {
-  listStyle: 'none',
-  paddingLeft: 0,
-  margin: '4px 0 0',
-  fontSize: 12,
-  color: colors.textMain,
-}
-
-const smallActionButton: CSSProperties = {
-  ...primaryButton,
-  fontSize: 12,
-  padding: '4px 8px',
-  borderRadius: 999,
-  justifyContent: 'center',
-}
-
-const notesArea: CSSProperties = {
-  width: '100%',
-  minHeight: 70,
-  resize: 'vertical',
-  fontSize: 12,
-  padding: 6,
-  borderRadius: 8,
-  border: `1px solid ${colors.borderSubtle}`,
-  fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
 }
