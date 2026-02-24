@@ -1,12 +1,11 @@
 // worker/src/routes/chat.ts
 import { Router } from "express";
 import { prisma } from "../prisma.js";
-import { openai } from "../services/openai.js";
+import { getOpenAIClient } from "../services/openai.js";
 
 const router = Router();
 
 // GET /chat/threads
-// returns the user's existing threads for sidebar
 router.get("/threads", async (req, res) => {
   try {
     const userId = (req as any).userId as string | number | undefined;
@@ -16,11 +15,7 @@ router.get("/threads", async (req, res) => {
       where: { userId: userId as any },
       orderBy: { createdAt: "desc" },
       take: 50,
-      select: {
-        id: true,
-        title: true,
-        createdAt: true,
-      },
+      select: { id: true, title: true, createdAt: true },
     });
 
     return res.json({ ok: true, threads });
@@ -31,7 +26,6 @@ router.get("/threads", async (req, res) => {
 });
 
 // GET /chat/thread/:id
-// returns messages for a thread
 router.get("/thread/:id", async (req, res) => {
   try {
     const userId = (req as any).userId as string | number | undefined;
@@ -53,12 +47,7 @@ router.get("/thread/:id", async (req, res) => {
       where: { threadId },
       orderBy: { createdAt: "asc" },
       take: 200,
-      select: {
-        role: true,
-        content: true,
-        createdAt: true,
-        model: true,
-      },
+      select: { role: true, content: true, createdAt: true, model: true },
     });
 
     return res.json({ ok: true, threadId, messages });
@@ -69,7 +58,6 @@ router.get("/thread/:id", async (req, res) => {
 });
 
 // POST /chat
-// body: { threadId?: number, message: string }
 router.post("/", async (req, res) => {
   try {
     const userId = (req as any).userId as string | number | undefined;
@@ -77,10 +65,7 @@ router.post("/", async (req, res) => {
 
     const { threadId, message } = req.body || {};
     const text = String(message || "").trim();
-
-    if (!text) {
-      return res.status(400).json({ ok: false, error: "message required" });
-    }
+    if (!text) return res.status(400).json({ ok: false, error: "message required" });
 
     // 1) find or create thread
     const thread = threadId
@@ -91,9 +76,7 @@ router.post("/", async (req, res) => {
           data: { userId: userId as any, title: text.slice(0, 60) },
         });
 
-    if (!thread) {
-      return res.status(404).json({ ok: false, error: "thread not found" });
-    }
+    if (!thread) return res.status(404).json({ ok: false, error: "thread not found" });
 
     // 2) save user message
     await prisma.chatMessage.create({
@@ -107,15 +90,15 @@ router.post("/", async (req, res) => {
       take: 30,
     });
 
-    // 4) call OpenAI
+    // 4) call OpenAI (lazy client)
+    const openai = getOpenAIClient();
     const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
     const transcript =
       recent
         .map((m) => {
           const r = String(m.role || "").toLowerCase();
-          const role =
-            r === "assistant" ? "Assistant" : r === "system" ? "System" : "User";
+          const role = r === "assistant" ? "Assistant" : r === "system" ? "System" : "User";
           return `${role}: ${m.content}`;
         })
         .join("\n") + "\nAssistant:";

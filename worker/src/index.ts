@@ -8,9 +8,10 @@ const app = createApp();
 let server: any = null;
 
 function start(port: number) {
-  server = app.listen(port, () =>
-    console.log(`worker listening on http://localhost:${port}`),
-  );
+  server = app.listen(port, () => {
+    console.log(`worker listening on http://localhost:${port}`);
+  });
+
   server.on('error', (err: any) => {
     if (err?.code === 'EADDRINUSE') {
       console.warn(`Port ${port} in use; retrying on ${port + 1}...`);
@@ -26,10 +27,12 @@ function gracefulShutdown() {
   else process.exit(0);
 }
 
+// nodemon restart signal
 process.once('SIGUSR2', () => {
   gracefulShutdown();
   setTimeout(() => process.kill(process.pid, 'SIGUSR2'), 50);
 });
+
 process.on('SIGINT', gracefulShutdown);
 process.on('SIGTERM', gracefulShutdown);
 

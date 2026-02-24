@@ -49,18 +49,15 @@ function domainIntentTags(profile: TaskProfile): string[] {
   const out: string[] = [];
   if (profile.finance) out.push("finance");
   if (profile.highStakes) out.push("enterprise", "analysis", "reasoning");
-
   if (profile.type === "sentiment") out.push("sentiment");
   if (profile.type === "qa_rag") out.push("rag", "retrieval", "search");
   if (profile.type === "extraction") out.push("extraction");
   if (profile.type === "coding") out.push("code", "coding", "programming");
   if (profile.type === "summarization") out.push("summarization", "summary");
-
   if (profile.subtype === "trading") out.push("trading", "low-latency", "fast");
   if (profile.subtype === "risk") out.push("risk");
   if (profile.subtype === "compliance") out.push("compliance");
   if (profile.subtype === "filings") out.push("filings");
-
   return out;
 }
 
@@ -78,25 +75,34 @@ router.post("/", async (req, res) => {
     const minCtx = Math.max(0, Number(context) || 0);
     const targetLatency = Math.max(1, Number(latency) || 1);
 
-    // AI classification (Ollama)
     const profile = (await classifyTask(String(task))) as ClassifiedProfile;
-
     const scoringTaskText = profile._meta?.normalizedTask ?? String(task);
-    const qTokens = new Set(tokenize(scoringTaskText));
 
-    const derivedMinCtx =
-      profile.longDoc ? Math.max(minCtx, 16000) :
-      profile.type === "qa_rag" ? Math.max(minCtx, 8000) :
-      minCtx;
+    const qTokens = new Set(tokenize(scoringTaskText));
+    const derivedMinCtx = profile.longDoc
+      ? Math.max(minCtx, 16000)
+      : profile.type === "qa_rag"
+        ? Math.max(minCtx, 8000)
+        : minCtx;
 
     const w = weightsFor(profile);
     const intent = domainIntentTags(profile);
 
-    const models = await prisma.modelProfile.findMany();
+    const models = await prisma.modelProfile.findMany({
+      include: {
+        benchmarkResults: {
+          where: {
+            benchmark: { key: "arena_elo" },
+            source: "lmsys-arena",
+            runId: "latest",
+          },
+        },
+      },
+    });
 
     const scored = models
       .map((m) => {
-        const tags = jsonArrayToStringArray(m.domainTags).map((t) => String(t).toLowerCase());
+        const domainTags = jsonArrayToStringArray(m.domainTags).map((t) => String(t).toLowerCase());
         const modality = String(m.modality ?? "");
         const apiType = String(m.apiType ?? "");
 
@@ -123,13 +129,12 @@ router.post("/", async (req, res) => {
           provider: m.provider,
           family: m.family,
           name: m.name,
-          domainTags: tags,
+          domainTags,
         });
 
         if (profile.highStakes && capScore < 0.6) hardFails.push("Insufficient capability for high-stakes tasks");
         if (hardFails.length > 0) return null;
 
-        // --- SOFT SCORING ---
         const ctxSlack = Math.max(0, ctx - derivedMinCtx);
         const ctxScore = ctxUnknown
           ? 0.2
@@ -143,10 +148,13 @@ router.post("/", async (req, res) => {
         else latencyScore = Math.exp(-(lat - targetLatency) / targetLatency);
 
         const costRef =
-          profile.type === "qa_rag" ? 0.004 :
-          profile.type === "summarization" ? 0.003 :
-          profile.type === "extraction" ? 0.002 :
-          0.002;
+          profile.type === "qa_rag"
+            ? 0.004
+            : profile.type === "summarization"
+              ? 0.003
+              : profile.type === "extraction"
+                ? 0.002
+                : 0.002;
 
         let costScore = 0;
         if (costUnknown) costScore = 0.3;
@@ -156,37 +164,44 @@ router.post("/", async (req, res) => {
         const baseTextFit = overlapScore(qTokens, mTokens);
 
         let tagHits = 0;
-        for (const it of intent) if (hasTag(tags, it)) tagHits++;
+        for (const it of intent) if (hasTag(domainTags, it)) tagHits++;
 
         const tagBoost =
-          intent.length === 0
-            ? 0
-            : Math.min(1, tagHits / Math.max(2, Math.ceil(intent.length * 0.5)));
+          intent.length === 0 ? 0 : Math.min(1, tagHits / Math.max(2, Math.ceil(intent.length * 0.5)));
 
         let domainScore = Math.max(baseTextFit, 0.55 * tagBoost + 0.45 * baseTextFit);
 
         if (profile.finance) {
-          if (tags.includes("finance")) domainScore = Math.max(domainScore, 0.65);
-          else domainScore = Math.min(domainScore, 0.50);
+          if (domainTags.includes("finance")) domainScore = Math.max(domainScore, 0.65);
+          else domainScore = Math.min(domainScore, 0.5);
         }
 
-        const unknownPenalty =
-          (ctxUnknown ? 0.15 : 0) + (latUnknown ? 0.15 : 0) + (costUnknown ? 0.10 : 0);
-
+        const unknownPenalty = (ctxUnknown ? 0.15 : 0) + (latUnknown ? 0.15 : 0) + (costUnknown ? 0.1 : 0);
         const clsConf = profile._meta?.confidence ?? 1;
         const confPenalty = clsConf < 0.4 ? 0.08 : clsConf < 0.6 ? 0.04 : 0;
 
         let stabilityPenalty = 0;
-        if (tags.includes("preview")) stabilityPenalty += 0.05;
-        if (tags.includes("legacy")) stabilityPenalty += 0.10;
-        if (tags.includes("deprecated")) stabilityPenalty += 0.18;
+        if (domainTags.includes("preview")) stabilityPenalty += 0.05;
+        if (domainTags.includes("legacy")) stabilityPenalty += 0.1;
+        if (domainTags.includes("deprecated")) stabilityPenalty += 0.18;
+
+        const arenaRaw = m.benchmarkResults?.[0]?.scoreRaw ?? null;
+        const arenaNormalized = m.benchmarkResults?.[0]?.scoreNormalized ?? null;
+
+        const arenaScore01 =
+          arenaNormalized == null
+            ? 0.5
+            : arenaNormalized <= 1.001
+              ? clamp01(arenaNormalized)
+              : clamp01(arenaNormalized / 100);
+
+        const arenaWeight = profile.highStakes ? 0.25 : profile.finance ? 0.2 : 0.15;
+        const baseWeightScale = 1 - arenaWeight;
 
         let score =
-          w.ctx * ctxScore +
-          w.lat * latencyScore +
-          w.cost * costScore +
-          w.domain * domainScore +
-          w.cap * capScore;
+          baseWeightScale *
+            (w.ctx * ctxScore + w.lat * latencyScore + w.cost * costScore + w.domain * domainScore + w.cap * capScore) +
+          arenaWeight * arenaScore01;
 
         score = clamp01(score - unknownPenalty - confPenalty - stabilityPenalty);
 
@@ -198,6 +213,7 @@ router.post("/", async (req, res) => {
         if (stabilityPenalty > 0) warnings.push("Model stability is lower (preview/legacy/deprecated)");
 
         const why: string[] = [
+          `Arena benchmark: ${arenaNormalized != null ? scoreToPercent(arenaScore01) + "%" : "Not available"}`,
           `Context fit: ${scoreToPercent(ctxScore)}%`,
           `Latency fit: ${scoreToPercent(latencyScore)}%`,
           `Cost value: ${scoreToPercent(costScore)}%`,
@@ -207,40 +223,36 @@ router.post("/", async (req, res) => {
 
         why.unshift(
           `Task normalized: ${profile._meta?.normalizedTask ?? String(task)}`,
-          ...(profile._meta?.detectedTypos?.length
-            ? [`Typos fixed: ${profile._meta.detectedTypos.join(", ")}`]
-            : [])
+          ...(profile._meta?.detectedTypos?.length ? [`Typos fixed: ${profile._meta.detectedTypos.join(", ")}`] : [])
         );
-        if (intent.length > 0) why.push(`Intent tags matched: ${tagHits}/${intent.length}`);
 
-        const pros = jsonArrayToStringArray(m.pros);
-        const cons = jsonArrayToStringArray(m.cons);
-        const ragTips = jsonArrayToStringArray(m.ragTips);
+        if (intent.length > 0) why.push(`Intent tags matched: ${tagHits}/${intent.length}`);
 
         return {
           model: {
             id: m.id,
             name: m.name,
-            provider: m.provider ?? "Unknown",
+            provider: m.provider ?? null,
+            family: m.family ?? null,
+            arenaElo: arenaRaw,
             apiType: m.apiType ?? null,
             modality: m.modality ?? null,
-            context: ctx,
+            license: m.license ?? null,
+            contextWindow: ctxUnknown ? null : ctx,
             latencyMs: latUnknown ? null : lat,
             costPer1kTokens: costUnknown ? null : cost,
-            tags,
-            pros,
-            cons,
-            ragTip: ragTips[0] ?? "",
-            sources: m.url ? [m.url] : [],
+            domainTags,
+            pros: jsonArrayToStringArray(m.pros),
+            cons: jsonArrayToStringArray(m.cons),
+            ragTips: jsonArrayToStringArray(m.ragTips),
+            typicalUseCases: jsonArrayToStringArray(m.typicalUseCases),
+            strengths: jsonArrayToStringArray(m.strengths),
+            limitations: jsonArrayToStringArray(m.limitations),
+            source: m.source ?? null,
+            url: m.url ?? null,
           },
           score,
-          factors: {
-            ctxScore,
-            latencyScore,
-            costScore,
-            domainScore,
-            unknownPenalty, 
-          },
+          factors: { ctxScore, latencyScore, costScore, domainScore, unknownPenalty },
           why,
           warnings,
           confidence: clamp01(score * (1 - unknownPenalty)),
@@ -252,19 +264,7 @@ router.post("/", async (req, res) => {
     const results = scored.slice(0, 10);
 
     const pipelineCandidates = results.map((r: any) => ({
-      model: {
-        id: r.model.id,
-        name: r.model.name,
-        provider: r.model.provider,
-        apiType: r.model.apiType ?? null,
-        modality: r.model.modality ?? null,
-        context: r.model.context ?? 0,
-        latencyMs: r.model.latencyMs ?? null,
-        costPer1kTokens: r.model.costPer1kTokens ?? null,
-        tags: r.model.tags ?? [],
-        ragTip: r.model.ragTip ?? "",
-        sources: r.model.sources ?? [],
-      },
+      model: r.model,
       score: r.score ?? 0,
       factors: {
         ctxScore: r.factors?.ctxScore ?? 0,

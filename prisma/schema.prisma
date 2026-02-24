@@ -46,8 +46,60 @@ model ModelProfile {
   source String?
   url    String?
 
+  benchmarkResults BenchmarkResult[]
+  aliases          ModelAlias[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+model Benchmark {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique // "mmlu", "gsm8k", "humaneval", "arena_elo"
+  name        String   // "MMLU", "GSM8K", ...
+  category    String   // "reasoning" | "coding" | "general" | ...
+  unit        String   @default("percent") // "percent" | "elo" | "score"
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  results BenchmarkResult[]
+}
+
+model BenchmarkResult {
+  id              Int      @id @default(autoincrement())
+
+  modelId     String
+  benchmarkId Int
+
+  scoreRaw        Float
+  scoreNormalized Float
+
+  source     String
+  sourceUrl  String?
+  runId      String   @default("latest")   // ✅ make required + default
+  confidence String   @default("medium")
+  recordedAt DateTime @default(now())
+
+  model     ModelProfile @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  benchmark Benchmark    @relation(fields: [benchmarkId], references: [id], onDelete: Cascade)
+
+  @@unique([modelId, benchmarkId, source, runId])  // ✅ enables upsert
+  @@index([modelId, benchmarkId])
+  @@index([benchmarkId, recordedAt])
+  @@index([modelId, recordedAt])
+}
+
+model ModelAlias {
+  id        Int    @id @default(autoincrement())
+  modelId   String
+  source    String // "lmsys-arena" | "hf" | "pwc"
+  alias     String // exact name used by that source
+
+  model ModelProfile @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@unique([source, alias])
+  @@index([modelId])
 }
 
 model RecommendationEvent {

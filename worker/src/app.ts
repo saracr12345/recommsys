@@ -4,7 +4,7 @@ import cors from 'cors';
 import Parser from 'rss-parser';
 import cookieParser from 'cookie-parser';
 
-import modelsRouter from './routes/models.js';
+import modelsRouter, { getModelById } from './routes/models.js';
 import recommendRouter from './routes/recommend.js';
 import recommendationsRouter from './routes/recommendations.js';
 import authRouter from './routes/auth.js';
@@ -33,10 +33,18 @@ export function createApp() {
 
   // --- ROUTES ---
   app.use('/auth', authRouter);
+
+  // existing models CRUD routes (protected)
   app.use('/models', requireAuth, modelsRouter);
+
   app.use('/recommend', requireAuth, recommendRouter);
   app.use('/recommendations', requireAuth, recommendationsRouter);
   app.use('/chat', requireAuth, chatRouter);
+
+  // --- EXTRA API ENDPOINTS ---
+  // If you want these unprotected, keep as-is.
+  // If you want them protected too, wrap with requireAuth.
+  app.get('/api/models/:id', getModelById);
 
   // --- HEALTH ---
   app.get('/health', (_req, res) => res.json({ ok: true }));

@@ -3064,7 +3064,2901 @@ const models: Array<{
       "Not practical for most production teams",
     ],
   },  
+//claude ais 
+  {
+    id: "claude-opus-4-6",
+    name: "Claude Opus 4.6",
+    provider: "Anthropic",
+    family: "Claude",
+    modality: "multimodal",
+    domainTags: ["reasoning", "agents", "coding", "vision"],
+    apiType: "saas",
+    contextWindow: 200000, // 1M beta exists; keeping stable default
+    costPer1kTokens: 0.005, // $5 / 1M input tokens => $0.005 / 1k
+    latencyMs: 0,
+    license: "proprietary",
+    source: "anthropic-docs",
+    url: "https://platform.claude.com/docs/en/about-claude/models/overview",
   
+    pros: [
+      "Top-tier reasoning + coding performance",
+      "Strong agent workflows + tool use",
+      "Supports text + image input",
+    ],
+    cons: [
+      "More expensive than Sonnet/Haiku",
+      "Output pricing is higher (store separately if you track output cost)",
+    ],
+    ragTips: [
+      "Use long-context for full docs/codebases",
+      "Chunk less aggressively than small-context models; prefer semantic sections",
+    ],
+    typicalUseCases: [
+      "Complex RAG and analysis",
+      "Autonomous agents and multi-step workflows",
+      "High-stakes coding assistance",
+    ],
+    strengths: ["Reasoning depth", "Coding", "Vision + doc understanding"],
+    limitations: ["Proprietary", "Cost for large outputs"],
+  },
+  
+  {
+    id: "claude-sonnet-4-6",
+    name: "Claude Sonnet 4.6",
+    provider: "Anthropic",
+    family: "Claude",
+    modality: "multimodal",
+    domainTags: ["balanced", "agents", "coding", "vision"],
+    apiType: "saas",
+    contextWindow: 200000, // 1M beta exists
+    costPer1kTokens: 0.003, // $3 / 1M input tokens => $0.003 / 1k
+    latencyMs: 0,
+    license: "proprietary",
+    source: "anthropic-docs",
+    url: "https://platform.claude.com/docs/en/about-claude/models/overview",
+  
+    pros: [
+      "Best balance of speed and intelligence in Claude lineup",
+      "Strong for coding + agentic tool use",
+      "Text + image input",
+    ],
+    cons: [
+      "Not the absolute strongest (Opus is higher)",
+      "Output pricing still meaningful at scale",
+    ],
+    ragTips: [
+      "Great default for production RAG",
+      "Use citations/grounding and keep retrieved context tight but complete",
+    ],
+    typicalUseCases: [
+      "General assistant + chat",
+      "Production RAG assistants",
+      "Coding copilots",
+      "Ops / research workflows",
+    ],
+    strengths: ["Balanced quality", "Speed", "Tool use", "Vision"],
+    limitations: ["Proprietary"],
+  },
+  
+  {
+    id: "claude-haiku-4-5",
+    name: "Claude Haiku 4.5",
+    provider: "Anthropic",
+    family: "Claude",
+    modality: "multimodal",
+    domainTags: ["fast", "cost-efficient", "vision"],
+    apiType: "saas",
+    contextWindow: 200000,
+    costPer1kTokens: 0.001, // $1 / 1M input tokens => $0.001 / 1k
+    latencyMs: 0,
+    license: "proprietary",
+    source: "anthropic-docs",
+    url: "https://platform.claude.com/docs/en/about-claude/models/overview",
+  
+    pros: [
+      "Fastest Claude tier",
+      "Cost-efficient at scale",
+      "Text + image input",
+    ],
+    cons: [
+      "Lower ceiling than Sonnet/Opus on hardest tasks",
+    ],
+    ragTips: [
+      "Use for high-volume RAG Q&A with tight retrieval",
+      "Prefer short, high-signal chunks + reranking",
+    ],
+    typicalUseCases: [
+      "Customer support automation",
+      "High-throughput summarization",
+      "Simple agents and classification",
+    ],
+    strengths: ["Speed", "Cost efficiency"],
+    limitations: ["Not ideal for deepest reasoning"],
+  },
+
+  //gemini ais:
+  {
+    id: "gemini-3.1-pro",
+    name: "Gemini 3.1 Pro",
+    provider: "Google",
+    family: "Gemini 3",
+    modality: "multimodal",
+    domainTags: ["reasoning", "agents", "coding"],
+    apiType: "saas",
+    contextWindow: 0,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "google-ai-dev-docs",
+    url: "https://ai.google.dev/",
+  
+    pros: ["Advanced reasoning", "Strong agentic capabilities"],
+    cons: ["Preview release"],
+    ragTips: ["Use for complex RAG + multi-step reasoning"],
+    typicalUseCases: ["Autonomous agents", "Deep research", "Coding"],
+    strengths: ["Reasoning depth"],
+    limitations: ["Preview"],
+  },
+
+  {
+    id: "gemini-3-pro",
+    name: "Gemini 3 Pro",
+    provider: "Google",
+    family: "Gemini 3",
+    modality: "multimodal",
+    domainTags: ["reasoning", "multimodal"],
+    apiType: "saas",
+    contextWindow: 0,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "google-ai-dev-docs",
+    url: "https://ai.google.dev/",
+  
+    pros: ["State-of-the-art reasoning", "Multimodal understanding"],
+    cons: ["Preview"],
+    ragTips: ["Use for advanced doc + image reasoning"],
+    typicalUseCases: ["Complex analysis", "Vision reasoning"],
+    strengths: ["Multimodal reasoning"],
+    limitations: ["Preview"],
+  },
+
+  {
+    id: "gemini-3-flash",
+    name: "Gemini 3 Flash",
+    provider: "Google",
+    family: "Gemini 3",
+    modality: "multimodal",
+    domainTags: ["low-latency", "cost-efficient"],
+    apiType: "saas",
+    contextWindow: 0,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "google-ai-dev-docs",
+    url: "https://ai.google.dev/",
+  
+    pros: ["Frontier-class performance at lower cost"],
+    cons: ["Preview"],
+    ragTips: ["High-throughput RAG"],
+    typicalUseCases: ["Chatbots", "Summarization"],
+    strengths: ["Speed"],
+    limitations: ["Preview"],
+  },
+
+  {
+    id: "gemini-2.5-pro",
+    name: "Gemini 2.5 Pro",
+    provider: "Google",
+    family: "Gemini 2.5",
+    modality: "multimodal",
+    domainTags: ["reasoning", "coding"],
+    apiType: "saas",
+    contextWindow: 0,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "google-ai-dev-docs",
+    url: "https://ai.google.dev/",
+  
+    pros: ["Advanced reasoning", "Strong coding"],
+    cons: [],
+    ragTips: ["Use for enterprise assistants"],
+    typicalUseCases: ["Complex workflows"],
+    strengths: ["Reasoning"],
+    limitations: [],
+  },
+
+  {
+    id: "gemini-2.5-flash",
+    name: "Gemini 2.5 Flash",
+    provider: "Google",
+    family: "Gemini 2.5",
+    modality: "multimodal",
+    domainTags: ["low-latency", "high-volume"],
+    apiType: "saas",
+    contextWindow: 0,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "google-ai-dev-docs",
+    url: "https://ai.google.dev/",
+  
+    pros: ["Best price-performance"],
+    cons: [],
+    ragTips: ["Production RAG"],
+    typicalUseCases: ["Customer support"],
+    strengths: ["Speed"],
+    limitations: [],
+  },
+
+  {
+    id: "gemini-2.5-flash-lite",
+    name: "Gemini 2.5 Flash-Lite",
+    provider: "Google",
+    family: "Gemini 2.5",
+    modality: "multimodal",
+    domainTags: ["fast", "budget"],
+    apiType: "saas",
+    contextWindow: 0,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "google-ai-dev-docs",
+    url: "https://ai.google.dev/",
+  
+    pros: ["Fastest in 2.5 family"],
+    cons: [],
+    ragTips: ["Lightweight classification"],
+    typicalUseCases: ["Routing", "Intent detection"],
+    strengths: ["Speed"],
+    limitations: [],
+  },
+
+  {
+    id: "gemini-2.5-flash-live-preview",
+    name: "Gemini 2.5 Flash Live Preview",
+    provider: "Google",
+    family: "Gemini",
+    modality: "audio",
+    domainTags: ["realtime", "voice", "live", "streaming"],
+    apiType: "saas",
+    contextWindow: 0,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "google-ai-dev-docs",
+    url: "https://ai.google.dev/",
+  
+    pros: [
+      "Optimized for real-time conversational agents",
+      "Native audio streaming",
+    ],
+    cons: [
+      "Preview model (APIs/limits may change)",
+    ],
+    ragTips: [
+      "Use short, structured retrieval snippets for spoken responses",
+      "Cache system + persona prompts to reduce latency",
+    ],
+    typicalUseCases: [
+      "Voice assistants",
+      "Realtime call-style agents",
+      "Live support agents",
+    ],
+    strengths: [
+      "Low-latency audio interaction",
+      "Conversational flow",
+    ],
+    limitations: [
+      "Preview stability",
+      "Audio-focused (not for heavy offline batch reasoning)",
+    ],
+  },  
+
+  {
+    id: "gemini-2.5-flash-tts-preview",
+    name: "Gemini 2.5 Flash TTS Preview",
+    provider: "Google",
+    family: "Gemini",
+    modality: "audio",
+    domainTags: ["text-to-speech", "low-latency"],
+    apiType: "saas",
+    contextWindow: 0,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "google-ai-dev-docs",
+    url: "https://ai.google.dev/",
+  
+    pros: [
+      "Fast controllable speech synthesis",
+      "Good for real-time assistants",
+    ],
+    cons: [
+      "Preview model (may change)",
+    ],
+    ragTips: [
+      "Generate text first, then TTS as a separate step for control",
+    ],
+    typicalUseCases: [
+      "Realtime assistants",
+      "Fast narration",
+    ],
+    strengths: [
+      "Speed",
+      "Control over pacing/style (relative to basic TTS)",
+    ],
+    limitations: [
+      "Preview stability",
+    ],
+  },
+  
+  {
+    id: "gemini-2.5-pro-tts-preview",
+    name: "Gemini 2.5 Pro TTS Preview",
+    provider: "Google",
+    family: "Gemini",
+    modality: "audio",
+    domainTags: ["text-to-speech", "high-fidelity"],
+    apiType: "saas",
+    contextWindow: 0,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "google-ai-dev-docs",
+    url: "https://ai.google.dev/",
+  
+    pros: [
+      "Higher-fidelity speech synthesis",
+      "Better for structured, long-form audio",
+    ],
+    cons: [
+      "Preview model (may change)",
+    ],
+    ragTips: [
+      "Use clean SSML-like formatting (if supported) and structured scripts",
+    ],
+    typicalUseCases: [
+      "Podcasts and audiobooks",
+      "High-quality narration",
+    ],
+    strengths: [
+      "Audio quality",
+      "Clarity for long-form output",
+    ],
+    limitations: [
+      "Preview stability",
+    ],
+  },
+  // =========================
+// Google — Generative Media Models
+// =========================
+
+{
+  id: "nano-banana",
+  name: "Nano Banana",
+  provider: "Google",
+  family: "Nano Banana",
+  modality: "image",
+  domainTags: ["image-generation", "image-editing"],
+  apiType: "saas",
+  contextWindow: 0,
+  costPer1kTokens: 0,
+  latencyMs: 0,
+  license: "proprietary",
+  source: "google-ai-dev-docs",
+  url: "https://ai.google.dev/",
+
+  pros: [
+    "Native image generation and editing",
+    "Fast creative workflows",
+  ],
+  cons: [
+    "Preview/availability can vary by region and API access",
+  ],
+  ragTips: [
+    "For product images, provide explicit style + constraints (lighting, background, aspect ratio)",
+    "Use reference images where supported for consistency",
+  ],
+  typicalUseCases: [
+    "Marketing creatives",
+    "Image edits (background, object tweaks)",
+    "Concept art and ideation",
+  ],
+  strengths: [
+    "Fast iteration",
+    "Context-aware edits",
+  ],
+  limitations: [
+    "Not a text LLM",
+    "Exact feature set depends on endpoint/version",
+  ],
+},
+
+{
+  id: "nano-banana-pro-preview",
+  name: "Nano Banana Pro Preview",
+  provider: "Google",
+  family: "Nano Banana",
+  modality: "image",
+  domainTags: ["image-generation", "image-editing", "design", "pro"],
+  apiType: "saas",
+  contextWindow: 0,
+  costPer1kTokens: 0,
+  latencyMs: 0,
+  license: "proprietary",
+  source: "google-ai-dev-docs",
+  url: "https://ai.google.dev/",
+
+  pros: [
+    "Higher-end design quality for complex layouts",
+    "Better handling of detailed compositions",
+  ],
+  cons: [
+    "Preview model (APIs/limits may change)",
+  ],
+  ragTips: [
+    "Specify layout constraints (grid, margins, typography) to reduce randomness",
+    "Provide exact copy text for best text rendering (where supported)",
+  ],
+  typicalUseCases: [
+    "Professional design mockups",
+    "Brand creatives with precise layout",
+    "High-detail editing workflows",
+  ],
+  strengths: [
+    "Composition quality",
+    "Design control (relative to basic image models)",
+  ],
+  limitations: [
+    "Preview stability",
+    "Not intended for long-form text reasoning",
+  ],
+},
+
+{
+  id: "imagen-4",
+  name: "Imagen 4",
+  provider: "Google",
+  family: "Imagen",
+  modality: "image",
+  domainTags: ["text-to-image", "image-generation"],
+  apiType: "saas",
+  contextWindow: 0,
+  costPer1kTokens: 0,
+  latencyMs: 0,
+  license: "proprietary",
+  source: "google-ai-dev-docs",
+  url: "https://ai.google.dev/",
+
+  pros: [
+    "High-quality text-to-image generation",
+    "Strong clarity for detailed prompts",
+  ],
+  cons: [
+    "Not designed for image editing-first workflows compared to native edit models",
+  ],
+  ragTips: [
+    "Use structured prompts: subject + environment + lighting + lens + style + negatives",
+    "Generate multiple candidates and select best (n>1) for reliability",
+  ],
+  typicalUseCases: [
+    "Text-to-image generation",
+    "Product and campaign visuals",
+    "Illustrations and branding assets",
+  ],
+  strengths: [
+    "Image quality",
+    "Prompt adherence (varies by prompt)",
+  ],
+  limitations: [
+    "Not a general-purpose text LLM",
+  ],
+},
+
+{
+  id: "veo-3.1-preview",
+  name: "Veo 3.1 Preview",
+  provider: "Google",
+  family: "Veo",
+  modality: "video",
+  domainTags: ["video-generation", "cinematic", "text-to-video"],
+  apiType: "saas",
+  contextWindow: 0,
+  costPer1kTokens: 0,
+  latencyMs: 0,
+  license: "proprietary",
+  source: "google-ai-dev-docs",
+  url: "https://ai.google.dev/",
+
+  pros: [
+    "High-end cinematic video generation",
+    "Supports creative controls (varies by endpoint)",
+  ],
+  cons: [
+    "Preview model",
+    "Video generation can be compute-heavy and slower",
+  ],
+  ragTips: [
+    "Write shot-based prompts: scene 1/2/3 with camera + motion cues",
+    "Keep characters/objects consistent by repeating key descriptors",
+  ],
+  typicalUseCases: [
+    "Marketing video concepts",
+    "Storyboards and pre-visualization",
+    "Short cinematic clips",
+  ],
+  strengths: [
+    "Video quality potential",
+    "Creative control",
+  ],
+  limitations: [
+    "Preview stability",
+    "Not suited for text reasoning tasks",
+  ],
+},
+
+{
+  id: "lyria-experimental",
+  name: "Lyria Experimental",
+  provider: "Google",
+  family: "Lyria",
+  modality: "audio",
+  domainTags: ["music-generation", "audio", "creative"],
+  apiType: "saas",
+  contextWindow: 0,
+  costPer1kTokens: 0,
+  latencyMs: 0,
+  license: "proprietary",
+  source: "google-ai-dev-docs",
+  url: "https://ai.google.dev/",
+
+  pros: [
+    "Music generation with granular creative control (e.g., instruments/BPM, depending on endpoint)",
+  ],
+  cons: [
+    "Experimental (quality + API may change)",
+  ],
+  ragTips: [
+    "Provide explicit genre + tempo + instrumentation + structure (intro/verse/chorus)",
+  ],
+  typicalUseCases: [
+    "Background music",
+    "Creative prototyping",
+    "Soundtrack drafts",
+  ],
+  strengths: [
+    "Creative variety",
+    "Music-focused control",
+  ],
+  limitations: [
+    "Experimental stability",
+    "Not a text LLM",
+  ],
+},
+
+// =========================
+// Google — Tool / Agent Models
+// =========================
+
+{
+  id: "computer-use-preview",
+  name: "Computer Use Preview",
+  provider: "Google",
+  family: "Gemini Agents",
+  modality: "multimodal",
+  domainTags: ["agents", "automation", "ui", "computer-use"],
+  apiType: "saas",
+  contextWindow: 0,
+  costPer1kTokens: 0,
+  latencyMs: 0,
+  license: "proprietary",
+  source: "google-ai-dev-docs",
+  url: "https://ai.google.dev/",
+
+  pros: [
+    "Can interpret a screen and perform UI actions (click/type/navigate)",
+    "Useful for browser automation workflows",
+  ],
+  cons: [
+    "Preview model",
+    "Reliability depends on UI complexity and app changes",
+  ],
+  ragTips: [
+    "Use step-by-step plans and verify each action with a screen readback",
+    "Add guardrails (allowed domains/actions) to reduce risky automation",
+  ],
+  typicalUseCases: [
+    "Browser task automation",
+    "Form filling and repetitive workflows",
+    "QA / test flows (where allowed)",
+  ],
+  strengths: [
+    "UI grounding",
+    "Automation potential",
+  ],
+  limitations: [
+    "Preview stability",
+    "Can fail on dynamic/complex UIs",
+  ],
+},
+
+{
+  id: "gemini-deep-research-preview",
+  name: "Gemini Deep Research Preview",
+  provider: "Google",
+  family: "Gemini Agents",
+  modality: "multimodal",
+  domainTags: ["research", "agents", "autonomous", "citations"],
+  apiType: "saas",
+  contextWindow: 0,
+  costPer1kTokens: 0,
+  latencyMs: 0,
+  license: "proprietary",
+  source: "google-ai-dev-docs",
+  url: "https://ai.google.dev/",
+
+  pros: [
+    "Agentic research that plans and executes multi-step browsing",
+    "Designed for cited research-style outputs",
+  ],
+  cons: [
+    "Preview model",
+    "Research quality depends on available sources and query framing",
+  ],
+  ragTips: [
+    "Give a tight research question + constraints (date range, region, trusted sources)",
+    "Ask for citations per claim and a short evidence table",
+  ],
+  typicalUseCases: [
+    "Market research",
+    "Competitive analysis",
+    "Academic-style literature scans",
+  ],
+  strengths: [
+    "Autonomous planning",
+    "Synthesis over multiple sources",
+  ],
+  limitations: [
+    "Preview stability",
+    "Not guaranteed to access every paywalled source",
+  ],
+},
+
+// =========================
+// Google — Specialized Task Models
+// =========================
+
+{
+  id: "gemini-embeddings",
+  name: "Gemini Embeddings",
+  provider: "Google",
+  family: "Gemini",
+  modality: "text",
+  domainTags: ["embeddings", "semantic-search", "rag"],
+  apiType: "saas",
+  contextWindow: 0,
+  costPer1kTokens: 0,
+  latencyMs: 0,
+  license: "proprietary",
+  source: "google-ai-dev-docs",
+  url: "https://ai.google.dev/",
+
+  pros: [
+    "Vector embeddings for semantic search and RAG",
+    "Useful for clustering and classification",
+  ],
+  cons: [
+    "Not a chat/completions model",
+  ],
+  ragTips: [
+    "Use consistent chunking (e.g., 200–600 tokens) and store metadata",
+    "Add reranking on top of vector search for best results",
+  ],
+  typicalUseCases: [
+    "Vector search",
+    "RAG retrieval layer",
+    "Clustering and similarity",
+  ],
+  strengths: [
+    "Semantic representations",
+    "Retrieval performance (with good chunking)",
+  ],
+  limitations: [
+    "Requires vector DB + indexing pipeline",
+  ],
+},
+
+{
+  id: "gemini-robotics-preview",
+  name: "Gemini Robotics Preview",
+  provider: "Google",
+  family: "Gemini Robotics",
+  modality: "multimodal",
+  domainTags: ["robotics", "embodied-ai", "agents"],
+  apiType: "saas",
+  contextWindow: 0,
+  costPer1kTokens: 0,
+  latencyMs: 0,
+  license: "proprietary",
+  source: "google-ai-dev-docs",
+  url: "https://ai.google.dev/",
+
+  pros: [
+    "Designed for robotics / embodied reasoning (where supported)",
+  ],
+  cons: [
+    "Preview model",
+    "Not generally useful unless you’re integrating robotics stacks",
+  ],
+  ragTips: [
+    "Use structured state + action constraints",
+    "Log observations and actions for debugging + safety",
+  ],
+  typicalUseCases: [
+    "Robotics research",
+    "Embodied task planning",
+  ],
+  strengths: [
+    "Embodied reasoning focus",
+  ],
+  limitations: [
+    "Preview stability",
+    "Requires robotics integration to be meaningful",
+  ],
+},
+
+// Mistral (from Mistral Docs) — matches your exact object structure.
+// Notes:
+// - costPer1kTokens = **input** price (docs show $/M tokens ⇒ divide by 1000).
+// - Audio models priced per minute and OCR priced per 1000 pages → costPer1kTokens left as 0 and noted in limitations.
+  // =========================
+  // FEATURED / FRONTIER
+  // =========================
+  {
+    id: "mistral-large-2512+1",
+    name: "Mistral Large 3",
+    provider: "Mistral",
+    family: "Mistral Large",
+    modality: "multimodal",
+    domainTags: ["general", "reasoning", "vision", "open-weight"],
+    apiType: "saas",
+    contextWindow: 256000,
+    costPer1kTokens: 0.0005, // $0.5 / 1M input tokens
+    latencyMs: 0,
+    license: "open",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/mistral-large-3-25-12",
+
+    pros: ["Open-weight flagship", "Strong general reasoning + multimodal"],
+    cons: ["Heavier infra if self-hosting weights", "Output cost higher than input"],
+    ragTips: ["Use long-context for full docs; chunk less aggressively", "Prefer semantic sections over tiny chunks"],
+    typicalUseCases: ["General assistant", "Multimodal RAG", "Agentic workflows"],
+    strengths: ["Reasoning", "Vision understanding", "Broad capability"],
+    limitations: ["Proprietary API access terms still apply for hosted usage"],
+  },
+
+  {
+    id: "mistral-medium-2508+1",
+    name: "Mistral Medium 3.1",
+    provider: "Mistral",
+    family: "Mistral Medium",
+    modality: "multimodal",
+    domainTags: ["general", "balanced", "vision"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0.0004, // $0.4 / 1M input tokens
+    latencyMs: 0,
+    license: "proprietary",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/mistral-medium-3-1-25-08",
+
+    pros: ["Frontier-class multimodal", "Good balance of quality/cost"],
+    cons: ["Output cost can dominate at scale"],
+    ragTips: ["Use retrieval + citations", "Keep context tight; prefer high-signal chunks"],
+    typicalUseCases: ["Production assistants", "Enterprise workflows", "Multimodal Q&A"],
+    strengths: ["Balanced performance", "Vision + text"],
+    limitations: ["Not open-weight"],
+  },
+
+  {
+    id: "mistral-small-2506+1",
+    name: "Mistral Small 3.2",
+    provider: "Mistral",
+    family: "Mistral Small",
+    modality: "multimodal",
+    domainTags: ["fast", "cost-efficient", "vision"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0.0001, // $0.1 / 1M input tokens
+    latencyMs: 0,
+    license: "open",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/mistral-small-3-2-25-06",
+
+    pros: ["Great price-performance", "Open-weight"],
+    cons: ["Lower ceiling than Large/Medium on hardest tasks"],
+    ragTips: ["Use reranking", "Short, high-signal chunks"],
+    typicalUseCases: ["High-volume RAG", "Support automation", "Summarization"],
+    strengths: ["Speed", "Cost efficiency"],
+    limitations: ["May need careful prompting for complex reasoning"],
+  },
+
+  // =========================
+  // MINISTRAL (open)
+  // =========================
+  {
+    id: "ministral-14b-2512+1",
+    name: "Ministral 3 14B",
+    provider: "Mistral",
+    family: "Ministral",
+    modality: "multimodal",
+    domainTags: ["open-weight", "edge", "vision"],
+    apiType: "saas",
+    contextWindow: 256000,
+    costPer1kTokens: 0.0002, // $0.2 / 1M input tokens
+    latencyMs: 0,
+    license: "open",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/ministral-3-14b-25-12",
+
+    pros: ["Strong edge/local deployment option", "Very long context for its size"],
+    cons: ["Requires infra/tuning for best results"],
+    ragTips: ["Quantize for inference", "Use semantic chunking + rerank"],
+    typicalUseCases: ["Private deployments", "On-device/edge assistants", "Doc Q&A"],
+    strengths: ["Efficiency", "Long-context"],
+    limitations: ["Not the absolute best at hardest reasoning vs top-tier flagships"],
+  },
+
+  {
+    id: "ministral-8b-2512+1",
+    name: "Ministral 3 8B",
+    provider: "Mistral",
+    family: "Ministral",
+    modality: "multimodal",
+    domainTags: ["open-weight", "edge", "vision"],
+    apiType: "saas",
+    contextWindow: 256000,
+    costPer1kTokens: 0.00015, // $0.15 / 1M input tokens
+    latencyMs: 0,
+    license: "open",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/ministral-3-8b-25-12",
+
+    pros: ["Efficient + capable", "Long context"],
+    cons: ["Lower ceiling than 14B/Large"],
+    ragTips: ["Keep retrieval high-signal", "Use reranking"],
+    typicalUseCases: ["High-volume assistants", "Edge deployment", "Vision Q&A"],
+    strengths: ["Speed", "Cost"],
+    limitations: ["May struggle with deepest multi-step reasoning"],
+  },
+
+  {
+    id: "ministral-3b-2512+1",
+    name: "Ministral 3 3B",
+    provider: "Mistral",
+    family: "Ministral",
+    modality: "multimodal",
+    domainTags: ["open-weight", "tiny", "edge", "vision"],
+    apiType: "saas",
+    contextWindow: 256000,
+    costPer1kTokens: 0.0001, // $0.1 / 1M input tokens
+    latencyMs: 0,
+    license: "open",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/ministral-3-3b-25-12",
+
+    pros: ["Very small + efficient", "Long context for size"],
+    cons: ["Lower quality ceiling on complex tasks"],
+    ragTips: ["Use strict retrieval filters", "Prefer short answers + grounding"],
+    typicalUseCases: ["Lightweight agents", "Classification", "Edge assistants"],
+    strengths: ["Efficiency", "Cost"],
+    limitations: ["Not ideal for deep reasoning/coding"],
+  },
+
+  // =========================
+  // MAGISTRAL (reasoning)
+  // =========================
+  {
+    id: "magistral-medium-2509+1",
+    name: "Magistral Medium 1.2",
+    provider: "Mistral",
+    family: "Magistral",
+    modality: "multimodal",
+    domainTags: ["reasoning", "multimodal"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0.002, // $2 / 1M input tokens
+    latencyMs: 0,
+    license: "proprietary",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/magistral-medium-1-2-25-09",
+
+    pros: ["Reasoning-focused frontier model", "Strong for complex analysis"],
+    cons: ["Premium pricing tier"],
+    ragTips: ["Use citations + grounding", "Use long-context for full artifacts"],
+    typicalUseCases: ["High-stakes reasoning", "Complex RAG", "Planning workflows"],
+    strengths: ["Reasoning depth"],
+    limitations: ["Not open-weight"],
+  },
+
+  {
+    id: "magistral-small-2509+1",
+    name: "Magistral Small 1.2",
+    provider: "Mistral",
+    family: "Magistral",
+    modality: "multimodal",
+    domainTags: ["reasoning", "cost-efficient"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0.0005, // $0.5 / 1M input tokens
+    latencyMs: 0,
+    license: "open",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/magistral-small-1-2-25-09",
+
+    pros: ["Reasoning-oriented small model", "Open-weight"],
+    cons: ["Lower ceiling than Magistral Medium"],
+    ragTips: ["Use retrieval + rerank", "Keep prompts structured"],
+    typicalUseCases: ["Reasoning at scale", "RAG assistants", "Summarization + analysis"],
+    strengths: ["Reasoning per cost"],
+    limitations: ["May require better prompting for very hard problems"],
+  },
+
+  // =========================
+  // SPECIALIST: OCR
+  // =========================
+  {
+    id: "mistral-ocr-2512+1",
+    name: "OCR 3",
+    provider: "Mistral",
+    family: "OCR",
+    modality: "multimodal",
+    domainTags: ["ocr", "document-ai"],
+    apiType: "saas",
+    contextWindow: 0,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/ocr-3-25-12",
+
+    pros: ["Document AI OCR service", "Handles interleaved text/images"],
+    cons: ["Priced per page (not per token)"],
+    ragTips: ["Run OCR → chunk extracted text → embed + retrieve", "Preserve layout/section headers as metadata"],
+    typicalUseCases: ["PDF extraction", "Form understanding", "Doc ingestion pipelines"],
+    strengths: ["OCR quality", "Doc workflows"],
+    limitations: ["Pricing is $/1000 pages (see docs)"],
+  },
+
+  {
+    id: "mistral-ocr-2505",
+    name: "OCR 2",
+    provider: "Mistral",
+    family: "OCR",
+    modality: "multimodal",
+    domainTags: ["ocr", "document-ai"],
+    apiType: "saas",
+    contextWindow: 0,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/ocr-2-25-05",
+
+    pros: ["OCR service for Document AI"],
+    cons: ["Priced per page (not per token)"],
+    ragTips: ["Store bounding boxes/regions if you do layout-aware retrieval"],
+    typicalUseCases: ["Doc ingestion", "Scanning pipelines"],
+    strengths: ["OCR extraction"],
+    limitations: ["Pricing is $/1000 pages (see docs)"],
+  },
+
+  // =========================
+  // AUDIO: VOXTRAL (transcription + audio input)
+  // =========================
+  {
+    id: "voxtral-mini-2507+1",
+    name: "Voxtral Mini",
+    provider: "Mistral",
+    family: "Voxtral",
+    modality: "audio",
+    domainTags: ["audio", "speech-to-text", "transcription"],
+    apiType: "saas",
+    contextWindow: 32000,
+    costPer1kTokens: 0, // priced per minute + tokens; see docs
+    latencyMs: 0,
+    license: "open",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/voxtral-mini-25-07",
+
+    pros: ["Efficient audio input model"],
+    cons: ["Pricing includes $/min (see docs)"],
+    ragTips: ["Transcribe → clean → chunk by speaker/turn", "Attach timestamps as metadata"],
+    typicalUseCases: ["Meeting notes", "Voice assistants", "Audio ingestion"],
+    strengths: ["Audio input efficiency"],
+    limitations: ["Pricing is per minute (and may include token components)"],
+  },
+
+  {
+    id: "voxtral-small-2507+1",
+    name: "Voxtral Small",
+    provider: "Mistral",
+    family: "Voxtral",
+    modality: "audio",
+    domainTags: ["audio", "speech-to-text", "instruct"],
+    apiType: "saas",
+    contextWindow: 32000,
+    costPer1kTokens: 0, // priced per minute + tokens; see docs
+    latencyMs: 0,
+    license: "open",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/voxtral-small-25-07",
+
+    pros: ["Audio input + instruct use cases"],
+    cons: ["Pricing includes $/min (see docs)"],
+    ragTips: ["Use diarization if needed", "Chunk by topic shifts"],
+    typicalUseCases: ["Voice agents", "Audio Q&A", "Transcription workflows"],
+    strengths: ["Audio capability"],
+    limitations: ["Pricing is per minute (and may include token components)"],
+  },
+
+  {
+    id: "voxtral-mini-2602+1",
+    name: "Voxtral Mini Transcribe 2",
+    provider: "Mistral",
+    family: "Voxtral",
+    modality: "audio",
+    domainTags: ["transcription", "speech-to-text"],
+    apiType: "saas",
+    contextWindow: 0, // docs show "--"
+    costPer1kTokens: 0, // $0.003 / min
+    latencyMs: 0,
+    license: "proprietary",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/voxtral-mini-transcribe-26-02",
+
+    pros: ["Optimized for transcription"],
+    cons: ["Per-minute pricing (not per token)"],
+    ragTips: ["Store timestamps", "Chunk per speaker/turn"],
+    typicalUseCases: ["Batch transcription", "Meeting/audio ingestion"],
+    strengths: ["Transcription focus"],
+    limitations: ["Priced at $/min (see docs)"],
+  },
+
+  {
+    id: "voxtral-mini-transcribe-realtime-2602+1",
+    name: "Voxtral Mini Transcribe Realtime",
+    provider: "Mistral",
+    family: "Voxtral",
+    modality: "audio",
+    domainTags: ["transcription", "realtime", "speech-to-text"],
+    apiType: "saas",
+    contextWindow: 0, // docs show "--"
+    costPer1kTokens: 0, // $0.006 / min
+    latencyMs: 0,
+    license: "open",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/voxtral-mini-transcribe-realtime-26-02",
+
+    pros: ["Live transcription optimized"],
+    cons: ["Per-minute pricing"],
+    ragTips: ["Stream → segment into utterances", "Attach timestamps for retrieval"],
+    typicalUseCases: ["Realtime captions", "Live meeting transcription"],
+    strengths: ["Realtime transcription"],
+    limitations: ["Priced at $/min (see docs)"],
+  },
+
+  // =========================
+  // CODING
+  // =========================
+  {
+    id: "codestral-2508+1",
+    name: "Codestral",
+    provider: "Mistral",
+    family: "Codestral",
+    modality: "text",
+    domainTags: ["coding", "code-completion", "fim"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0.0003, // $0.3 / 1M input tokens
+    latencyMs: 0,
+    license: "proprietary",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/codestral-25-08",
+
+    pros: ["Strong for code completion", "Optimized for low-latency coding tasks"],
+    cons: ["Not open-weight"],
+    ragTips: ["Use repo-map + file-level retrieval", "Prefer FIM prompting for edits"],
+    typicalUseCases: ["IDE copilot", "Code generation", "FIM editing"],
+    strengths: ["Coding speed", "FIM workflows"],
+    limitations: ["Less suited for broad multimodal tasks"],
+  },
+
+  {
+    id: "devstral-2512+2",
+    name: "Devstral 2",
+    provider: "Mistral",
+    family: "Devstral",
+    modality: "multimodal",
+    domainTags: ["agents", "coding", "tool-use", "swe"],
+    apiType: "saas",
+    contextWindow: 256000,
+    costPer1kTokens: 0.0004, // $0.4 / 1M input tokens
+    latencyMs: 0,
+    license: "open",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/devstral-2-25-12",
+
+    pros: ["SWE agent focus", "Very long context"],
+    cons: ["Output cost higher; agent runs can get expensive"],
+    ragTips: ["Use tool logging + short intermediate summaries", "Cache repo index + embeddings"],
+    typicalUseCases: ["Codebase exploration", "Multi-file edits", "Agentic SWE tasks"],
+    strengths: ["Tool use", "Long-context code understanding"],
+    limitations: ["May require guardrails for autonomous actions"],
+  },
+
+  {
+    id: "codestral-embed-2505+1",
+    name: "Codestral Embed",
+    provider: "Mistral",
+    family: "Codestral",
+    modality: "text",
+    domainTags: ["embeddings", "code-search", "semantic-search"],
+    apiType: "saas",
+    contextWindow: 8000,
+    costPer1kTokens: 0.00015, // $0.15 / 1M tokens
+    latencyMs: 0,
+    license: "proprietary",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/codestral-embed-25-05",
+
+    pros: ["Code-focused embeddings"],
+    cons: ["Small context compared to chat models (expected for embeddings)"],
+    ragTips: ["Index at function/class granularity", "Store path + symbols metadata"],
+    typicalUseCases: ["Code semantic search", "Repo RAG", "Duplicate detection"],
+    strengths: ["Code retrieval quality"],
+    limitations: ["Embeddings only (no generation)"],
+  },
+
+  // =========================
+  // MODERATION
+  // =========================
+  {
+    id: "mistral-moderation-2411+1",
+    name: "Mistral Moderation",
+    provider: "Mistral",
+    family: "Moderation",
+    modality: "text",
+    domainTags: ["moderation", "safety"],
+    apiType: "saas",
+    contextWindow: 8000,
+    costPer1kTokens: 0.0001, // $0.1 / 1M tokens
+    latencyMs: 0,
+    license: "proprietary",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/mistral-moderation-24-11",
+
+    pros: ["Dedicated moderation endpoint"],
+    cons: ["Not a general chat model"],
+    ragTips: [],
+    typicalUseCases: ["Content filtering", "Safety checks", "Policy enforcement"],
+    strengths: ["Safety classification"],
+    limitations: ["Moderation-only"],
+  },
+
+  // =========================
+  // OTHER MODELS (still supported in docs list you pasted)
+  // =========================
+  {
+    id: "labs-mistral-small-creative",
+    name: "Mistral Small Creative",
+    provider: "Mistral",
+    family: "Mistral Small",
+    modality: "text",
+    domainTags: ["creative-writing", "roleplay", "dialog"],
+    apiType: "saas",
+    contextWindow: 32000,
+    costPer1kTokens: 0.0001, // $0.1 / 1M input tokens
+    latencyMs: 0,
+    license: "proprietary",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/mistral-small-creative-25-12",
+
+    pros: ["Creative writing + character dialog"],
+    cons: ["Not optimized for strict factuality"],
+    ragTips: ["If used with RAG, enforce citations + quote grounding"],
+    typicalUseCases: ["Creative writing", "Story/dialog generation"],
+    strengths: ["Style + creativity"],
+    limitations: ["May hallucinate if used for factual tasks"],
+  },
+
+  {
+    id: "labs-devstral-small-2512+1",
+    name: "Devstral Small 2",
+    provider: "Mistral",
+    family: "Devstral",
+    modality: "multimodal",
+    domainTags: ["agents", "coding", "tool-use", "swe"],
+    apiType: "saas",
+    contextWindow: 256000,
+    costPer1kTokens: 0, // docs show $0 plus priced tiers; keep 0 here
+    latencyMs: 0,
+    license: "proprietary",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/devstral-small-2-25-12",
+
+    pros: ["Labs SWE agent model", "Long context"],
+    cons: ["Labs availability/terms may change"],
+    ragTips: ["Repo indexing + tool logs", "Cache intermediate plans"],
+    typicalUseCases: ["SWE agents", "Codebase editing"],
+    strengths: ["Tool use"],
+    limitations: ["Labs model; pricing/terms in docs"],
+  },
+
+  {
+    id: "devstral-medium-2507",
+    name: "Devstral Medium 1.0",
+    provider: "Mistral",
+    family: "Devstral",
+    modality: "text",
+    domainTags: ["agents", "coding", "tool-use", "swe"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0.0004, // $0.4 / 1M input tokens
+    latencyMs: 0,
+    license: "proprietary",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/devstral-medium-1-0-25-07",
+
+    pros: ["Enterprise SWE workflows"],
+    cons: ["Premium output pricing"],
+    ragTips: ["Use tool routing", "Summarize + checkpoint long runs"],
+    typicalUseCases: ["Enterprise SWE agents", "Refactors", "Code review automation"],
+    strengths: ["SWE focus"],
+    limitations: ["Text-only"],
+  },
+
+  {
+    id: "devstral-small-2507",
+    name: "Devstral Small 1.1",
+    provider: "Mistral",
+    family: "Devstral",
+    modality: "text",
+    domainTags: ["agents", "coding", "tool-use", "swe"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0.0001, // $0.1 / 1M input tokens
+    latencyMs: 0,
+    license: "open",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/devstral-small-1-1-25-07",
+
+    pros: ["Open-weight SWE-oriented model"],
+    cons: ["Lower ceiling than larger Devstral tiers"],
+    ragTips: ["Use repo embeddings + rerank", "Keep edit instructions tight"],
+    typicalUseCases: ["Tool-using agents", "Multi-file edits", "Repo Q&A"],
+    strengths: ["Efficiency", "Tool use"],
+    limitations: ["Text-only"],
+  },
+
+  {
+    id: "mistral-medium-2505",
+    name: "Mistral Medium 3",
+    provider: "Mistral",
+    family: "Mistral Medium",
+    modality: "multimodal",
+    domainTags: ["general", "vision"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0.0004, // $0.4 / 1M input tokens
+    latencyMs: 0,
+    license: "proprietary",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/mistral-medium-3-25-05",
+
+    pros: ["Frontier-class multimodal baseline"],
+    cons: ["Output pricing can dominate"],
+    ragTips: ["Use retrieval + citations", "Prefer semantic chunking"],
+    typicalUseCases: ["General assistants", "Vision+text workflows"],
+    strengths: ["Balanced multimodal"],
+    limitations: ["Not open-weight"],
+  },
+
+  {
+    id: "mistral-large-2411",
+    name: "Mistral Large 2.1",
+    provider: "Mistral",
+    family: "Mistral Large",
+    modality: "multimodal",
+    domainTags: ["general", "high-complexity", "vision"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0.002, // $2 / 1M input tokens
+    latencyMs: 0,
+    license: "proprietary",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/mistral-large-2-1-24-11",
+
+    pros: ["Strong for hard tasks"],
+    cons: ["Higher cost tier"],
+    ragTips: ["Use long-context for full docs/codebases"],
+    typicalUseCases: ["Complex analysis", "Coding + planning"],
+    strengths: ["Reasoning", "General performance"],
+    limitations: ["Not open-weight"],
+  },
+
+  {
+    id: "pixtral-large-2411+1",
+    name: "Pixtral Large",
+    provider: "Mistral",
+    family: "Pixtral",
+    modality: "multimodal",
+    domainTags: ["vision", "multimodal"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0.002, // $2 / 1M input tokens
+    latencyMs: 0,
+    license: "proprietary",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/pixtral-large-24-11",
+
+    pros: ["Strong multimodal/vision model"],
+    cons: ["Higher cost tier"],
+    ragTips: ["For images/docs: keep relevant pages; avoid overloading context"],
+    typicalUseCases: ["Image + doc understanding", "Multimodal assistants"],
+    strengths: ["Vision"],
+    limitations: ["Not open-weight"],
+  },
+
+  {
+    id: "open-mistral-nemo-2407+1",
+    name: "Mistral Nemo 12B",
+    provider: "Mistral",
+    family: "Mistral Nemo",
+    modality: "multimodal",
+    domainTags: ["multilingual", "open-weight", "vision"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0.00015, // $0.15 / 1M input tokens
+    latencyMs: 0,
+    license: "open",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/mistral-nemo-12b-24-07",
+
+    pros: ["Strong multilingual open model"],
+    cons: ["Older generation vs newest frontier tiers"],
+    ragTips: ["Use language-aware chunking", "Store language metadata in vectors"],
+    typicalUseCases: ["Multilingual RAG", "Global assistants"],
+    strengths: ["Multilingual"],
+    limitations: ["May underperform newest flagships on hardest tasks"],
+  },
+
+  {
+    id: "mistral-embed-2312+1",
+    name: "Mistral Embed",
+    provider: "Mistral",
+    family: "Embeddings",
+    modality: "text",
+    domainTags: ["embeddings", "semantic-search", "rag"],
+    apiType: "saas",
+    contextWindow: 8000,
+    costPer1kTokens: 0.0001, // $0.1 / 1M tokens
+    latencyMs: 0,
+    license: "proprietary",
+    source: "mistral-docs",
+    url: "https://docs.mistral.ai/models/mistral-embed-23-12",
+
+    pros: ["General-purpose embeddings for RAG"],
+    cons: ["Embeddings only (no generation)"],
+    ragTips: ["Use consistent chunk sizes", "Store source + section metadata"],
+    typicalUseCases: ["Vector search", "RAG indexing", "Clustering"],
+    strengths: ["Semantic retrieval"],
+    limitations: ["Not a chat model"],
+  },
+  
+  //=========================
+  //COHERE — COMMAND FAMILY
+  //=========================
+  {
+    id: "command-a-03-2025",
+    name: "Command A",
+    provider: "Cohere",
+    family: "Command",
+    modality: "text",
+    domainTags: ["agents", "rag", "tool-use", "multilingual"],
+    apiType: "saas",
+    contextWindow: 256000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "cohere-docs",
+    url: "https://docs.cohere.com/docs/models",
+  
+    pros: [
+      "Most performant Cohere model",
+      "Strong tool use and agent workflows",
+      "High throughput",
+    ],
+    cons: [
+      "Enterprise-oriented pricing tier",
+    ],
+    ragTips: [
+      "Use with Rerank for higher retrieval precision",
+      "Chunk at 400–800 tokens for best performance",
+    ],
+    typicalUseCases: [
+      "Enterprise RAG systems",
+      "Agents with tools",
+      "Multilingual assistants",
+    ],
+    strengths: [
+      "Tool use",
+      "Long context",
+      "Multilingual reasoning",
+    ],
+    limitations: [
+      "Text-only (no vision)",
+    ],
+  },
+
+  {
+    id: "command-a-reasoning-08-2025",
+    name: "Command A Reasoning",
+    provider: "Cohere",
+    family: "Command",
+    modality: "text",
+    domainTags: ["reasoning", "agents", "multilingual"],
+    apiType: "saas",
+    contextWindow: 256000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "cohere-docs",
+    url: "https://docs.cohere.com/docs/models",
+  
+    pros: [
+      "Reasoning-first architecture",
+      "Strong multi-step planning",
+    ],
+    cons: [
+      "Higher latency than non-reasoning variants",
+    ],
+    ragTips: [
+      "Use when complex chain-of-thought reasoning is required",
+    ],
+    typicalUseCases: [
+      "Planning agents",
+      "Complex analysis",
+      "Multi-step RAG",
+    ],
+    strengths: [
+      "Structured reasoning",
+    ],
+    limitations: [
+      "Text-only",
+    ],
+  },
+
+  {
+    id: "command-a-vision-07-2025",
+    name: "Command A Vision",
+    provider: "Cohere",
+    family: "Command",
+    modality: "multimodal",
+    domainTags: ["vision", "document-ai", "ocr"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "cohere-docs",
+    url: "https://docs.cohere.com/docs/models",
+  
+    pros: [
+      "Image + text understanding",
+      "Strong document Q&A",
+    ],
+    cons: [
+      "Supports fewer languages than text-only Command A",
+    ],
+    ragTips: [
+      "Use structured doc chunks with image references",
+    ],
+    typicalUseCases: [
+      "Chart analysis",
+      "OCR pipelines",
+      "Document Q&A",
+    ],
+    strengths: [
+      "Enterprise vision tasks",
+    ],
+    limitations: [
+      "Not optimized for video/audio",
+    ],
+  },
+
+  {
+    id: "command-r7b-12-2024",
+    name: "Command R7B",
+    provider: "Cohere",
+    family: "Command",
+    modality: "text",
+    domainTags: ["rag", "agents", "efficient"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "cohere-docs",
+    url: "https://docs.cohere.com/docs/models",
+  
+    pros: [
+      "Small + fast",
+      "Optimized for RAG and agents",
+    ],
+    cons: [
+      "Lower ceiling than Command A",
+    ],
+    ragTips: [
+      "Ideal for cost-sensitive RAG systems",
+    ],
+    typicalUseCases: [
+      "Production RAG",
+      "Lightweight agents",
+    ],
+    strengths: [
+      "Efficiency",
+    ],
+    limitations: [
+      "Text-only",
+    ],
+  },
+
+  //=========================
+//COHERE — EMBED MODELS
+//=========================
+
+  {
+    id: "embed-v4.0",
+    name: "Embed v4.0",
+    provider: "Cohere",
+    family: "Embed",
+    modality: "text",
+    domainTags: ["embeddings", "rag", "semantic-search"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "cohere-docs",
+    url: "https://docs.cohere.com/docs/embed",
+
+    pros: [
+      "Supports text + images",
+      "Flexible embedding dimensions",
+    ],
+    cons: [
+      "Embeddings only (no generation)",
+    ],
+    ragTips: [
+      "Store metadata (source, section, language)",
+    ],
+    typicalUseCases: [
+      "Vector search",
+      "Clustering",
+      "Semantic similarity",
+    ],
+    strengths: [
+      "Multimodal embeddings",
+    ],
+    limitations: [
+      "Requires vector database",
+    ],
+  },  
+
+  {
+    id: "embed-multilingual-v3.0",
+    name: "Embed Multilingual v3.0",
+    provider: "Cohere",
+    family: "Embed",
+    modality: "text",
+    domainTags: ["embeddings", "multilingual", "rag"],
+    apiType: "saas",
+    contextWindow: 512,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "cohere-docs",
+    url: "https://docs.cohere.com/docs/embed",
+
+    pros: [
+      "Multilingual embedding support",
+    ],
+    cons: [
+      "Shorter context window",
+    ],
+    ragTips: [
+      "Use consistent chunking across languages",
+    ],
+    typicalUseCases: [
+      "Global RAG",
+      "Multilingual search",
+    ],
+    strengths: [
+      "Language coverage",
+    ],
+    limitations: [
+      "Embeddings only",
+    ],
+  },
+
+  //=========================
+   //COHERE — RERANK
+  //=========================
+  {
+    id: "rerank-v4.0-pro",
+    name: "Rerank v4.0 Pro",
+    provider: "Cohere",
+    family: "Rerank",
+    modality: "text",
+    domainTags: ["rerank", "search", "rag"],
+    apiType: "saas",
+    contextWindow: 32000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "cohere-docs",
+    url: "https://docs.cohere.com/docs/rerank",
+  
+    pros: [
+      "High-quality re-ranking",
+      "Multilingual support",
+    ],
+    cons: [
+      "Separate endpoint from chat",
+    ],
+    ragTips: [
+      "Use after vector retrieval to improve ranking precision",
+    ],
+    typicalUseCases: [
+      "Search systems",
+      "RAG pipelines",
+    ],
+    strengths: [
+      "Precision ranking",
+    ],
+    limitations: [
+      "Does not generate text",
+    ],
+  },
+
+  //=========================
+  //COHERE — AYA FAMILY
+  //=========================
+
+  {
+    id: "c4ai-aya-expanse-8b",
+    name: "Aya Expanse 8B",
+    provider: "Cohere",
+    family: "Aya",
+    modality: "text",
+    domainTags: ["multilingual", "open-weight"],
+    apiType: "saas",
+    contextWindow: 8000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "cohere-docs",
+    url: "https://docs.cohere.com/docs/aya",
+  
+    pros: [
+      "Multilingual (23 languages)",
+      "Optimized for low latency",
+    ],
+    cons: [
+      "Smaller model size",
+    ],
+    ragTips: [
+      "Use language-aware chunking",
+    ],
+    typicalUseCases: [
+      "Global assistants",
+      "Cross-language RAG",
+    ],
+    strengths: [
+      "Language coverage",
+    ],
+    limitations: [
+      "Text-only",
+    ],
+  },
+
+  {
+    id: "c4ai-aya-vision-32b",
+    name: "Aya Vision 32B",
+    provider: "Cohere",
+    family: "Aya",
+    modality: "multimodal",
+    domainTags: ["multilingual", "vision"],
+    apiType: "saas",
+    contextWindow: 16000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "cohere-docs",
+    url: "https://docs.cohere.com/docs/aya",
+  
+    pros: [
+      "Multilingual + vision",
+      "Strong benchmark performance",
+    ],
+    cons: [
+      "Higher compute requirements",
+    ],
+    ragTips: [
+      "Combine text + image retrieval when using multimodal RAG",
+    ],
+    typicalUseCases: [
+      "Vision Q&A",
+      "Multilingual document analysis",
+    ],
+    strengths: [
+      "Multimodal multilingual",
+    ],
+    limitations: [
+      "Limited output token cap",
+    ],
+  },
+
+  //=========================
+  //ALIBABA — QWEN 2.5 (LATEST)
+  //=========================
+
+  {
+    id: "qwen2.5-72b-instruct",
+    name: "Qwen 2.5 72B Instruct",
+    provider: "Alibaba",
+    family: "Qwen 2.5",
+    modality: "text",
+    domainTags: ["general", "reasoning", "open-weight"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "alibaba-docs",
+    url: "https://qwenlm.github.io/",
+  
+    pros: [
+      "Strong open-weight flagship",
+      "Good reasoning and multilingual performance",
+    ],
+    cons: [
+      "Requires substantial infrastructure if self-hosted",
+    ],
+    ragTips: [
+      "Use semantic chunking with 400–800 token windows",
+    ],
+    typicalUseCases: [
+      "Enterprise RAG",
+      "General assistants",
+      "Multilingual chat",
+    ],
+    strengths: [
+      "Open-weight",
+      "Multilingual",
+    ],
+    limitations: [
+      "Not multimodal",
+    ],
+  },
+
+  {
+    id: "qwen2.5-32b-instruct",
+    name: "Qwen 2.5 32B Instruct",
+    provider: "Alibaba",
+    family: "Qwen 2.5",
+    modality: "text",
+    domainTags: ["balanced", "open-weight"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "alibaba-docs",
+    url: "https://qwenlm.github.io/",
+  
+    pros: [
+      "Good balance between performance and compute cost",
+    ],
+    cons: [
+      "Lower ceiling than 72B",
+    ],
+    ragTips: [
+      "Use reranking for higher retrieval precision",
+    ],
+    typicalUseCases: [
+      "Production assistants",
+      "Moderate-scale RAG",
+    ],
+    strengths: [
+      "Efficiency",
+    ],
+    limitations: [
+      "Text-only",
+    ],
+  },
+
+  //=========================
+  //QWEN CODER
+  //=========================
+
+  {
+    id: "qwen2.5-coder-32b",
+    name: "Qwen 2.5 Coder 32B",
+    provider: "Alibaba",
+    family: "Qwen Coder",
+    modality: "text",
+    domainTags: ["coding", "code-completion", "open-weight"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "alibaba-docs",
+    url: "https://qwenlm.github.io/",
+  
+    pros: [
+      "Strong coding performance",
+      "Open-weight model",
+    ],
+    cons: [
+      "Focused primarily on code tasks",
+    ],
+    ragTips: [
+      "Use repo embeddings + file-level retrieval",
+    ],
+    typicalUseCases: [
+      "IDE copilots",
+      "Code generation",
+      "Code explanation",
+    ],
+    strengths: [
+      "Code reasoning",
+    ],
+    limitations: [
+      "Not multimodal",
+    ],
+  },
+
+  //=========================
+  //QWEN-VL (VISION)
+  //=========================
+
+  {
+    id: "qwen2.5-vl-72b",
+    name: "Qwen 2.5 VL 72B",
+    provider: "Alibaba",
+    family: "Qwen VL",
+    modality: "multimodal",
+    domainTags: ["vision", "multimodal", "open-weight"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "alibaba-docs",
+    url: "https://qwenlm.github.io/",
+  
+    pros: [
+      "Image + text reasoning",
+      "Strong multimodal benchmarks",
+    ],
+    cons: [
+      "High compute requirements",
+    ],
+    ragTips: [
+      "Attach image captions as metadata in RAG systems",
+    ],
+    typicalUseCases: [
+      "Document analysis",
+      "Chart/diagram reasoning",
+      "Vision Q&A",
+    ],
+    strengths: [
+      "Multimodal reasoning",
+    ],
+    limitations: [
+      "No native audio support",
+    ],
+  },
+
+  //=========================
+  //QWEN-AUDIO
+  //=========================
+
+  {
+    id: "qwen-audio",
+    name: "Qwen Audio",
+    provider: "Alibaba",
+    family: "Qwen Audio",
+    modality: "audio",
+    domainTags: ["speech-to-text", "audio"],
+    apiType: "saas",
+    contextWindow: 0,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "alibaba-docs",
+    url: "https://qwenlm.github.io/",
+  
+    pros: [
+      "Audio understanding capabilities",
+    ],
+    cons: [
+      "Less mature than text models",
+    ],
+    ragTips: [
+      "Transcribe → clean → chunk before embedding",
+    ],
+    typicalUseCases: [
+      "Audio transcription",
+      "Voice assistant preprocessing",
+    ],
+    strengths: [
+      "Audio input support",
+    ],
+    limitations: [
+      "Not optimized for large-scale reasoning",
+    ],
+  },
+
+  //=========================
+  //QWEN EMBEDDINGS
+  //=========================
+
+  {
+    id: "qwen-embedding",
+    name: "Qwen Embedding",
+    provider: "Alibaba",
+    family: "Qwen",
+    modality: "text",
+    domainTags: ["embeddings", "semantic-search", "rag"],
+    apiType: "saas",
+    contextWindow: 8192,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "alibaba-docs",
+    url: "https://qwenlm.github.io/",
+  
+    pros: [
+      "Open-weight embeddings",
+      "Good multilingual support",
+    ],
+    cons: [
+      "Embeddings only",
+    ],
+    ragTips: [
+      "Use consistent chunk sizes",
+    ],
+    typicalUseCases: [
+      "Vector search",
+      "Clustering",
+      "RAG retrieval",
+    ],
+    strengths: [
+      "Multilingual embeddings",
+    ],
+    limitations: [
+      "No generation capability",
+    ],
+  },
+
+  //ollama
+  {
+    id: "llama-3.1-405b",
+    name: "LLaMA 3.1 405B",
+    provider: "Meta",
+    family: "LLaMA 3.1",
+    modality: "text",
+    domainTags: ["flagship", "reasoning", "open-weight"],
+    apiType: "self-hosted",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "meta",
+    url: "https://ai.meta.com/llama/",
+  
+    pros: [
+      "Largest open-weight model from Meta",
+      "Strong reasoning and knowledge coverage",
+    ],
+    cons: [
+      "Extremely heavy infrastructure requirements",
+    ],
+    ragTips: [
+      "Use semantic chunking with high-quality reranking",
+    ],
+    typicalUseCases: [
+      "Enterprise private deployments",
+      "Advanced RAG systems",
+    ],
+    strengths: [
+      "Reasoning depth",
+      "Open-weight control",
+    ],
+    limitations: [
+      "High compute cost",
+    ],
+  },
+
+  {
+    id: "llama-3.1-70b",
+    name: "LLaMA 3.1 70B",
+    provider: "Meta",
+    family: "LLaMA 3.1",
+    modality: "text",
+    domainTags: ["open-weight", "balanced"],
+    apiType: "self-hosted",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "meta",
+    url: "https://ai.meta.com/llama/",
+  
+    pros: [
+      "Strong performance for size",
+      "Widely adopted in production",
+    ],
+    cons: [
+      "Requires GPU infrastructure",
+    ],
+    ragTips: [
+      "Quantize for inference (4-bit/8-bit)",
+    ],
+    typicalUseCases: [
+      "Private RAG deployments",
+      "Internal enterprise assistants",
+    ],
+    strengths: [
+      "Performance per compute",
+    ],
+    limitations: [
+      "Text-only",
+    ],
+  },
+
+  {
+    id: "llama-3.1-8b",
+    name: "LLaMA 3.1 8B",
+    provider: "Meta",
+    family: "LLaMA 3.1",
+    modality: "text",
+    domainTags: ["efficient", "edge", "open-weight"],
+    apiType: "self-hosted",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "meta",
+    url: "https://ai.meta.com/llama/",
+  
+    pros: [
+      "Lightweight compared to 70B",
+      "Great for local deployment",
+    ],
+    cons: [
+      "Lower ceiling than 70B/405B",
+    ],
+    ragTips: [
+      "Keep prompts structured and retrieval tight",
+    ],
+    typicalUseCases: [
+      "Local assistants",
+      "Edge deployment",
+    ],
+    strengths: [
+      "Efficiency",
+    ],
+    limitations: [
+      "Not ideal for complex multi-step reasoning",
+    ],
+  },
+
+  {
+    id: "llama-3-70b",
+    name: "LLaMA 3 70B",
+    provider: "Meta",
+    family: "LLaMA 3",
+    modality: "text",
+    domainTags: ["open-weight", "balanced"],
+    apiType: "self-hosted",
+    contextWindow: 8192,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "meta",
+    url: "https://ai.meta.com/llama/",
+    pros: ["Strong open-weight baseline"],
+    cons: ["Shorter context than 3.1"],
+    ragTips: ["Use chunk compression"],
+    typicalUseCases: ["Private chatbots"],
+    strengths: ["Reliable performance"],
+    limitations: ["Shorter context window"],
+  },
+
+  {
+    id: "llama-3.2-11b-vision",
+    name: "LLaMA 3.2 11B Vision",
+    provider: "Meta",
+    family: "LLaMA 3.2",
+    modality: "multimodal",
+    domainTags: ["vision", "open-weight"],
+    apiType: "self-hosted",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "meta",
+    url: "https://ai.meta.com/llama/",
+    pros: ["Image + text reasoning"],
+    cons: ["Smaller model size"],
+    ragTips: ["Attach image captions as metadata"],
+    typicalUseCases: ["Vision Q&A", "Document analysis"],
+    strengths: ["Multimodal"],
+    limitations: ["Not state-of-the-art vs proprietary vision models"],
+  },
+
+  //=========================
+  //DEEPSEEK — GENERAL
+  //=========================
+
+  {
+    id: "deepseek-v3",
+    name: "DeepSeek V3",
+    provider: "DeepSeek",
+    family: "DeepSeek V3",
+    modality: "text",
+    domainTags: ["general", "reasoning", "open-weight"],
+    apiType: "self-hosted",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "deepseek-docs",
+    url: "https://www.deepseek.com/",
+  
+    pros: [
+      "Strong open-weight flagship model",
+      "Competitive reasoning performance",
+      "Large context window",
+    ],
+    cons: [
+      "High infrastructure requirements for full-size variant",
+    ],
+    ragTips: [
+      "Use structured prompts for multi-step reasoning",
+      "Combine with reranking for higher retrieval precision",
+    ],
+    typicalUseCases: [
+      "Enterprise RAG",
+      "Private assistants",
+      "General-purpose LLM tasks",
+    ],
+    strengths: [
+      "Reasoning depth",
+      "Open-weight flexibility",
+    ],
+    limitations: [
+      "Text-only",
+    ],
+  },
+
+  //=========================
+  //DEEPSEEK — REASONING
+  //=========================
+
+  {
+    id: "deepseek-r1",
+    name: "DeepSeek R1",
+    provider: "DeepSeek",
+    family: "DeepSeek R1",
+    modality: "text",
+    domainTags: ["reasoning", "math", "chain-of-thought", "open-weight"],
+    apiType: "self-hosted",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "deepseek-docs",
+    url: "https://www.deepseek.com/",
+  
+    pros: [
+      "Explicit reasoning optimization",
+      "Strong performance on math and logic tasks",
+    ],
+    cons: [
+      "Higher latency due to reasoning steps",
+    ],
+    ragTips: [
+      "Best used when step-by-step reasoning is required",
+    ],
+    typicalUseCases: [
+      "Math solving",
+      "Logical analysis",
+      "Complex planning",
+    ],
+    strengths: [
+      "Structured reasoning capability",
+    ],
+    limitations: [
+      "Text-only",
+    ],
+  },
+
+  //=========================
+  //DEEPSEEK — CODER
+  //=========================
+
+  {
+    id: "deepseek-coder-v2",
+    name: "DeepSeek Coder V2",
+    provider: "DeepSeek",
+    family: "DeepSeek Coder",
+    modality: "text",
+    domainTags: ["coding", "code-completion", "open-weight"],
+    apiType: "self-hosted",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "deepseek-docs",
+    url: "https://www.deepseek.com/",
+  
+    pros: [
+      "Optimized for code generation",
+      "Strong multilingual code support",
+    ],
+    cons: [
+      "Less suited for general reasoning tasks",
+    ],
+    ragTips: [
+      "Use repository indexing + embedding retrieval",
+    ],
+    typicalUseCases: [
+      "IDE copilots",
+      "Code explanation",
+      "Software engineering agents",
+    ],
+    strengths: [
+      "Code reasoning",
+    ],
+    limitations: [
+      "Text-only",
+    ],
+  },
+
+  //=========================
+  //DEEPSEEK — VISION
+  //=========================
+
+  {
+    id: "deepseek-vl2",
+    name: "DeepSeek VL2",
+    provider: "DeepSeek",
+    family: "DeepSeek VL",
+    modality: "multimodal",
+    domainTags: ["vision", "multimodal", "open-weight"],
+    apiType: "self-hosted",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "deepseek-docs",
+    url: "https://www.deepseek.com/",
+  
+    pros: [
+      "Image + text understanding",
+      "Open-weight multimodal model",
+    ],
+    cons: [
+      "Requires significant compute resources",
+    ],
+    ragTips: [
+      "Store image captions and metadata for retrieval pipelines",
+    ],
+    typicalUseCases: [
+      "Document analysis",
+      "Chart/diagram reasoning",
+      "Vision Q&A",
+    ],
+    strengths: [
+      "Multimodal reasoning",
+    ],
+    limitations: [
+      "No native audio support",
+    ],
+  },
+
+  //=========================
+  //xAI — GROK MODELS
+  //=========================
+
+  {
+    id: "grok-2",
+    name: "Grok-2",
+    provider: "xAI",
+    family: "Grok",
+    modality: "multimodal",
+    domainTags: ["reasoning", "realtime", "social", "vision"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "xai-docs",
+    url: "https://x.ai/",
+  
+    pros: [
+      "Flagship xAI model",
+      "Strong reasoning and coding",
+      "Vision capabilities",
+      "Designed for real-time knowledge integration",
+    ],
+    cons: [
+      "Proprietary",
+      "Less mature ecosystem than OpenAI/Anthropic",
+    ],
+    ragTips: [
+      "Use with live data connectors for dynamic knowledge tasks",
+      "Add retrieval grounding for enterprise use cases",
+    ],
+    typicalUseCases: [
+      "Realtime assistants",
+      "Social media analysis",
+      "General-purpose chat",
+      "Vision Q&A",
+    ],
+    strengths: [
+      "Realtime context alignment",
+      "Multimodal reasoning",
+    ],
+    limitations: [
+      "Requires hosted API access",
+    ],
+  },
+
+  {
+    id: "grok-2-mini",
+    name: "Grok-2 Mini",
+    provider: "xAI",
+    family: "Grok",
+    modality: "text",
+    domainTags: ["efficient", "chat", "realtime"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "xai-docs",
+    url: "https://x.ai/",
+  
+    pros: [
+      "Faster and lighter than Grok-2",
+      "Cost-efficient for high-volume tasks",
+    ],
+    cons: [
+      "Lower reasoning ceiling",
+    ],
+    ragTips: [
+      "Use for high-throughput chat and summarization",
+    ],
+    typicalUseCases: [
+      "Customer support",
+      "Lightweight assistants",
+    ],
+    strengths: [
+      "Speed",
+      "Throughput",
+    ],
+    limitations: [
+      "Text-only",
+    ],
+  },
+
+  {
+    id: "grok-1.5",
+    name: "Grok-1.5",
+    provider: "xAI",
+    family: "Grok",
+    modality: "text",
+    domainTags: ["reasoning", "long-context"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "xai-docs",
+    url: "https://x.ai/",
+  
+    pros: [
+      "Strong reasoning performance",
+      "Long context window",
+    ],
+    cons: [
+      "Older generation compared to Grok-2",
+    ],
+    ragTips: [
+      "Use structured prompts for long-document analysis",
+    ],
+    typicalUseCases: [
+      "Long-form analysis",
+      "Enterprise Q&A",
+    ],
+    strengths: [
+      "Long-context reasoning",
+    ],
+    limitations: [
+      "No multimodal capability",
+    ],
+  },
+
+  {
+    id: "grok-1.5-vision",
+    name: "Grok-1.5 Vision",
+    provider: "xAI",
+    family: "Grok",
+    modality: "multimodal",
+    domainTags: ["vision", "multimodal"],
+    apiType: "saas",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "xai-docs",
+    url: "https://x.ai/",
+  
+    pros: [
+      "Image + text understanding",
+      "Strong document and diagram analysis",
+    ],
+    cons: [
+      "Older than Grok-2 Vision capabilities",
+    ],
+    ragTips: [
+      "Combine image captions with metadata for retrieval",
+    ],
+    typicalUseCases: [
+      "Chart analysis",
+      "Vision Q&A",
+    ],
+    strengths: [
+      "Multimodal reasoning",
+    ],
+    limitations: [
+      "Requires hosted API",
+    ],
+  },
+
+  //nvidia 
+
+  {
+    id: "nemotron-4-340b-instruct",
+    name: "Nemotron-4 340B Instruct",
+    provider: "NVIDIA",
+    family: "Nemotron 4",
+    modality: "text",
+    domainTags: ["general", "instruction-following", "synthetic-data", "open-weights"],
+    apiType: "self-hosted",
+    contextWindow: 4096,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "nvidia",
+    url: "https://huggingface.co/nvidia/Nemotron-4-340B-Instruct",
+  
+    pros: [
+      "Open-weight 340B class model",
+      "Strong for instruction-following + synthetic data generation",
+    ],
+    cons: [
+      "Very high infrastructure requirements",
+      "Shorter default context (4K) than modern long-context models",
+    ],
+    ragTips: [
+      "Use tight retrieval + reranking; keep chunks high-signal",
+    ],
+    typicalUseCases: [
+      "Synthetic data generation pipelines",
+      "Private enterprise chat assistants",
+      "Instruction-following tasks",
+    ],
+    strengths: ["Scale", "Instruction following"],
+    limitations: ["Text-only", "Default context is 4K"],
+  },
+  
+  {
+    id: "nemotron-4-340b-instruct-128k",
+    name: "Nemotron-4 340B Instruct 128K",
+    provider: "NVIDIA",
+    family: "Nemotron 4",
+    modality: "text",
+    domainTags: ["long-context", "reasoning", "agents", "open-weights"],
+    apiType: "self-hosted",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "nvidia-nim",
+    url: "https://docs.nvidia.com/nim/large-language-models/1.2.0/models.html",
+  
+    pros: [
+      "Long-context Nemotron 4 variant (128K)",
+      "Optimized packaging via NVIDIA NIM",
+    ],
+    cons: [
+      "Deployment complexity (NIM stack / GPU infra)",
+    ],
+    ragTips: [
+      "Chunk less aggressively; prefer semantic sections",
+      "Use citations/grounding for long-doc QA",
+    ],
+    typicalUseCases: [
+      "Long-document assistants",
+      "Enterprise RAG over large knowledge bases",
+      "Agent workflows needing long context",
+    ],
+    strengths: ["Long-context analysis"],
+    limitations: ["Text-only", "Operational overhead"],
+  },
+  
+  {
+    id: "nemotron-4-340b-reward",
+    name: "Nemotron-4 340B Reward",
+    provider: "NVIDIA",
+    family: "Nemotron 4",
+    modality: "text",
+    domainTags: ["reward-model", "alignment", "judge", "open-weights"],
+    apiType: "self-hosted",
+    contextWindow: 4096,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "nvidia",
+    url: "https://huggingface.co/nvidia/Nemotron-4-340B-Reward",
+  
+    pros: [
+      "Reward model useful for preference ranking / filtering",
+      "Good for RLAIF / quality scoring pipelines",
+    ],
+    cons: [
+      "Not a chat/generation model",
+      "Optimized for English",
+    ],
+    ragTips: [
+      "Use as a reranking/judge stage after candidate generations",
+    ],
+    typicalUseCases: [
+      "Response scoring (judge)",
+      "Synthetic data filtering",
+      "Alignment pipelines",
+    ],
+    strengths: ["Evaluation + preference scoring"],
+    limitations: ["Not for direct generation", "English-optimized"],
+  },
+  
+  {
+    id: "nvidia-nemotron-nano-9b-v2",
+    name: "NVIDIA Nemotron Nano 9B v2",
+    provider: "NVIDIA",
+    family: "Nemotron Nano",
+    modality: "text",
+    domainTags: ["efficient", "reasoning", "agents", "open-weights"],
+    apiType: "self-hosted",
+    contextWindow: 128000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "nvidia",
+    url: "https://build.nvidia.com/nvidia/nvidia-nemotron-nano-9b-v2/modelcard",
+  
+    pros: [
+      "Much more lightweight than 340B-class models",
+      "Designed for reasoning + agentic tasks",
+      "Long context (128K)",
+    ],
+    cons: [
+      "Lower ceiling vs large frontier models",
+    ],
+    ragTips: [
+      "Quantize for inference; use strong retrieval + reranking",
+    ],
+    typicalUseCases: [
+      "Local/edge-ish deployments (GPU required)",
+      "High-throughput RAG Q&A",
+      "Agent systems needing efficiency",
+    ],
+    strengths: ["Efficiency", "Reasoning-friendly"],
+    limitations: ["Text-only"],
+  },
+  
+  {
+    id: "nemotron-3-nano-30b-a3b",
+    name: "Nemotron 3 Nano 30B A3B",
+    provider: "NVIDIA",
+    family: "Nemotron 3",
+    modality: "text",
+    domainTags: ["long-context", "moe", "coding", "reasoning", "open-weights"],
+    apiType: "self-hosted",
+    contextWindow: 1000000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "open",
+    source: "nvidia",
+    url: "https://build.nvidia.com/nvidia/nemotron-3-nano-30b-a3b/modelcard",
+  
+    pros: [
+      "Long-context capable (up to 1M context)",
+      "MoE architecture aimed at efficiency",
+    ],
+    cons: [
+      "Practical deployments may use smaller default context due to VRAM",
+    ],
+    ragTips: [
+      "Use long-context only when needed; otherwise run at 128K/256K for cost/latency",
+    ],
+    typicalUseCases: [
+      "Very long document / log / codebase analysis",
+      "Agent workflows requiring long scratch context",
+    ],
+    strengths: ["Extreme context length", "Efficiency via MoE"],
+    limitations: ["Text-only", "Long context can be expensive in VRAM/latency"],
+  },
+
+  //amazon 
+  //=========================
+  //AMAZON — NOVA (NEW GENERATION)
+  //=========================
+
+  {
+    id: "amazon-nova-pro",
+    name: "Amazon Nova Pro",
+    provider: "Amazon",
+    family: "Nova",
+    modality: "multimodal",
+    domainTags: ["reasoning", "enterprise", "vision"],
+    apiType: "saas",
+    contextWindow: 200000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "aws-bedrock-docs",
+    url: "https://aws.amazon.com/bedrock/",
+  
+    pros: [
+      "Frontier Amazon model",
+      "Strong reasoning and multimodal capabilities",
+      "Designed for enterprise deployment",
+    ],
+    cons: [
+      "Bedrock ecosystem required",
+    ],
+    ragTips: [
+      "Use Bedrock RAG pipelines with embeddings + rerank",
+      "Keep structured retrieval for compliance-heavy workflows",
+    ],
+    typicalUseCases: [
+      "Enterprise assistants",
+      "Document + image analysis",
+      "Agentic workflows",
+    ],
+    strengths: [
+      "Enterprise integration",
+      "Multimodal reasoning",
+    ],
+    limitations: [
+      "AWS ecosystem dependency",
+    ],
+  },
+
+  {
+    id: "amazon-nova-lite",
+    name: "Amazon Nova Lite",
+    provider: "Amazon",
+    family: "Nova",
+    modality: "multimodal",
+    domainTags: ["balanced", "enterprise"],
+    apiType: "saas",
+    contextWindow: 200000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "aws-bedrock-docs",
+    url: "https://aws.amazon.com/bedrock/",
+  
+    pros: [
+      "Balanced performance and cost",
+      "Enterprise-ready",
+    ],
+    cons: [
+      "Lower reasoning ceiling than Nova Pro",
+    ],
+    ragTips: [
+      "Use for production RAG at scale",
+    ],
+    typicalUseCases: [
+      "Customer support",
+      "Enterprise Q&A systems",
+    ],
+    strengths: [
+      "Cost-performance balance",
+    ],
+    limitations: [
+      "AWS Bedrock access required",
+    ],
+  },
+
+  {
+    id: "amazon-nova-micro",
+    name: "Amazon Nova Micro",
+    provider: "Amazon",
+    family: "Nova",
+    modality: "text",
+    domainTags: ["efficient", "high-throughput"],
+    apiType: "saas",
+    contextWindow: 200000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "aws-bedrock-docs",
+    url: "https://aws.amazon.com/bedrock/",
+  
+    pros: [
+      "Fastest Nova tier",
+      "Cost-efficient for high-volume workloads",
+    ],
+    cons: [
+      "Text-only",
+      "Lower reasoning depth",
+    ],
+    ragTips: [
+      "Use for routing, summarization, and lightweight extraction",
+    ],
+    typicalUseCases: [
+      "Chat routing",
+      "Summarization",
+      "Intent detection",
+    ],
+    strengths: [
+      "Speed",
+    ],
+    limitations: [
+      "Not suited for complex multi-step reasoning",
+    ],
+  },
+
+  //=========================
+  //AMAZON — TITAN FAMILY
+  //=========================
+
+  {
+    id: "amazon-titan-text-express",
+    name: "Titan Text G1 Express",
+    provider: "Amazon",
+    family: "Titan",
+    modality: "text",
+    domainTags: ["general", "enterprise"],
+    apiType: "saas",
+    contextWindow: 8000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "aws-bedrock-docs",
+    url: "https://aws.amazon.com/bedrock/titan/",
+  
+    pros: [
+      "Enterprise-focused text generation",
+      "Stable Bedrock integration",
+    ],
+    cons: [
+      "Shorter context than Nova models",
+    ],
+    ragTips: [
+      "Use Titan Embeddings for retrieval layer",
+    ],
+    typicalUseCases: [
+      "Enterprise chat",
+      "Content generation",
+    ],
+    strengths: [
+      "AWS integration",
+    ],
+    limitations: [
+      "Text-only",
+    ],
+  },
+
+  {
+    id: "amazon-titan-embed-g1",
+    name: "Titan Embeddings G1",
+    provider: "Amazon",
+    family: "Titan",
+    modality: "text",
+    domainTags: ["embeddings", "rag", "semantic-search"],
+    apiType: "saas",
+    contextWindow: 8000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "aws-bedrock-docs",
+    url: "https://aws.amazon.com/bedrock/titan/",
+  
+    pros: [
+      "Optimized for Bedrock RAG pipelines",
+      "High-quality embeddings",
+    ],
+    cons: [
+      "Embeddings only",
+    ],
+    ragTips: [
+      "Use metadata filtering in Bedrock knowledge bases",
+    ],
+    typicalUseCases: [
+      "Vector search",
+      "RAG indexing",
+    ],
+    strengths: [
+      "Enterprise semantic retrieval",
+    ],
+    limitations: [
+      "No generation capability",
+    ],
+  },
+
+  {
+    id: "amazon-titan-multimodal-embed",
+    name: "Titan Multimodal Embeddings",
+    provider: "Amazon",
+    family: "Titan",
+    modality: "multimodal",
+    domainTags: ["embeddings", "image", "rag"],
+    apiType: "saas",
+    contextWindow: 8000,
+    costPer1kTokens: 0,
+    latencyMs: 0,
+    license: "proprietary",
+    source: "aws-bedrock-docs",
+    url: "https://aws.amazon.com/bedrock/titan/",
+  
+    pros: [
+      "Supports text + image embeddings",
+      "Designed for multimodal search systems",
+    ],
+    cons: [
+      "Embeddings only",
+    ],
+    ragTips: [
+      "Store image captions + metadata for better retrieval",
+    ],
+    typicalUseCases: [
+      "Image search",
+      "Multimodal RAG",
+    ],
+    strengths: [
+      "Multimodal retrieval",
+    ],
+    limitations: [
+      "Requires Bedrock vector infrastructure",
+    ],
+  },
+
+
+
 ];
 
 function asJsonArray(arr: string[]): Prisma.InputJsonValue {
@@ -3135,7 +6029,7 @@ async function main() {
 main()
   .catch((e) => {
     console.error(" seedModels.ts failed:", e);
-    process.exit(1);
+    throw new Error('Seeding failed')
   })
   .finally(async () => {
     await prisma.$disconnect();
