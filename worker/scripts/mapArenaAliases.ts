@@ -1,3 +1,4 @@
+//worker/scripts/mapArenaAliases.ts
 /// <reference types="node" />
 
 import { PrismaClient } from '@prisma/client'

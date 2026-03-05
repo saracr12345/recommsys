@@ -28,12 +28,13 @@ type ClassifiedProfile = TaskProfile & {
   };
 };
 
-type Weights = { ctx: number; lat: number; cost: number; domain: number; cap: number };
+type Weights = { ctx: number; lat: number; cost: number; domain: number; cap: number; bench: number };
 
 function weightsFor(profile: TaskProfile): Weights {
-  if (profile.highStakes) return { ctx: 0.18, lat: 0.10, cost: 0.08, domain: 0.42, cap: 0.22 };
-  if (profile.subtype === "trading") return { ctx: 0.12, lat: 0.38, cost: 0.12, domain: 0.28, cap: 0.10 };
-  return { ctx: 0.22, lat: 0.22, cost: 0.18, domain: 0.28, cap: 0.10 };
+  // bench is how much we trust benchmarks vs heuristics.
+  if (profile.highStakes) return { ctx: 0.16, lat: 0.10, cost: 0.08, domain: 0.30, cap: 0.16, bench: 0.20 };
+  if (profile.subtype === "trading") return { ctx: 0.10, lat: 0.34, cost: 0.12, domain: 0.20, cap: 0.10, bench: 0.14 };
+  return { ctx: 0.20, lat: 0.20, cost: 0.16, domain: 0.24, cap: 0.10, bench: 0.10 };
 }
 
 function scoreToPercent(score01: number) {
@@ -68,15 +69,86 @@ function overlapScore(q: Set<string>, m: Set<string>) {
   return hit / Math.max(3, Math.min(12, q.size));
 }
 
+/**
+ * Convert any benchmark normalized score to 0..1
+ * - If stored 0..100 => /100
+ * - If stored 0..1 => use as-is
+ */
+function normBench01(x: number | null | undefined): number | null {
+  if (x == null) return null;
+  if (!Number.isFinite(x)) return null;
+  if (x <= 1.001) return clamp01(x);
+  return clamp01(x / 100);
+}
+
+/**
+ * Aggregate multiple benchmarks into a single 0..1 score.
+ * Only uses what exists; missing benchmarks don't kill the model.
+ */
+function aggregateBenchmarks01(args: {
+  arena01: number | null;
+  mmlu01: number | null;
+  gsm8k01: number | null;
+  humaneval01: number | null;
+  hellaswag01: number | null;
+  arc01: number | null;
+  truthful01: number | null;
+  profile: TaskProfile;
+}): { bench01: number; detail: string[] } {
+  const { profile } = args;
+
+  // weights depend on task type
+  const w = (() => {
+    if (profile.type === "coding") return { humaneval: 0.50, arena: 0.20, mmlu: 0.15, gsm8k: 0.10, other: 0.05 };
+    if (profile.type === "reasoning") return { mmlu: 0.35, gsm8k: 0.25, arc: 0.15, arena: 0.15, other: 0.10 };
+    if (profile.type === "qa_rag") return { mmlu: 0.30, arena: 0.25, truthful: 0.20, hellaswag: 0.15, other: 0.10 };
+    if (profile.highStakes) return { mmlu: 0.30, truthful: 0.25, arena: 0.20, gsm8k: 0.15, other: 0.10 };
+    return { arena: 0.40, mmlu: 0.25, hellaswag: 0.20, other: 0.15 };
+  })();
+
+  const items: Array<{ key: string; v: number; w: number }> = [];
+
+  const push = (key: string, v: number | null, weight: number) => {
+    if (v == null) return;
+    items.push({ key, v, w: weight });
+  };
+
+  push("arena", args.arena01, (w as any).arena ?? 0);
+  push("mmlu", args.mmlu01, (w as any).mmlu ?? 0);
+  push("gsm8k", args.gsm8k01, (w as any).gsm8k ?? 0);
+  push("humaneval", args.humaneval01, (w as any).humaneval ?? 0);
+  push("hellaswag", args.hellaswag01, (w as any).hellaswag ?? 0);
+  push("arc", args.arc01, (w as any).arc ?? 0);
+  push("truthfulqa", args.truthful01, (w as any).truthful ?? 0);
+
+  if (items.length === 0) {
+    return { bench01: 0.50, detail: ["Benchmarks: none available → neutral 0.50"] };
+  }
+
+  // normalize weights to sum=1 over available metrics
+  const sumW = items.reduce((s, it) => s + it.w, 0) || 1;
+  const bench01 = clamp01(items.reduce((s, it) => s + it.v * (it.w / sumW), 0));
+
+  const detail = items.map((it) => `${it.key}: ${scoreToPercent(it.v)}% (w=${(it.w / sumW).toFixed(2)})`);
+  return { bench01, detail };
+}
+
 router.post("/", async (req, res) => {
   try {
-    const { task = "", privacy = "Any", latency = 1200, context = 4000 } = req.body || {};
+    // NOTE: your frontend is sending { task, constraints: {...} }
+    // but your backend previously expected { task, privacy, latency, context }.
+    // We'll accept both without breaking.
+    const body = req.body || {};
+    const task = String(body.task ?? "");
+    const privacy = String(body.privacy ?? body.constraints?.privacy ?? "Any");
+    const latency = Number(body.latency ?? body.constraints?.maxLatencyMs ?? 1200);
+    const context = Number(body.context ?? body.constraints?.minContextWindow ?? 4000);
 
     const minCtx = Math.max(0, Number(context) || 0);
     const targetLatency = Math.max(1, Number(latency) || 1);
 
-    const profile = (await classifyTask(String(task))) as ClassifiedProfile;
-    const scoringTaskText = profile._meta?.normalizedTask ?? String(task);
+    const profile = (await classifyTask(task)) as ClassifiedProfile;
+    const scoringTaskText = profile._meta?.normalizedTask ?? task;
 
     const qTokens = new Set(tokenize(scoringTaskText));
     const derivedMinCtx = profile.longDoc
@@ -92,10 +164,11 @@ router.post("/", async (req, res) => {
       include: {
         benchmarkResults: {
           where: {
-            benchmark: { key: "arena_elo" },
             source: "lmsys-arena",
             runId: "latest",
+            benchmark: { key: { in: ["arena_elo", "mmlu", "gsm8k", "humaneval", "hellaswag", "arc_challenge", "truthfulqa"] } },
           },
+          orderBy: { recordedAt: "desc" },
         },
       },
     });
@@ -107,8 +180,7 @@ router.post("/", async (req, res) => {
         const apiType = String(m.apiType ?? "");
 
         const hardFails: string[] = [];
-
-        if (!privacyAllows(String(privacy), apiType)) hardFails.push("Privacy requirement not satisfied");
+        if (!privacyAllows(privacy, apiType)) hardFails.push("Privacy requirement not satisfied");
         if (!modalityAllows(profile.type, modality)) hardFails.push("Modality not compatible with this task");
 
         const ctx = Number(m.contextWindow ?? 0);
@@ -135,6 +207,7 @@ router.post("/", async (req, res) => {
         if (profile.highStakes && capScore < 0.6) hardFails.push("Insufficient capability for high-stakes tasks");
         if (hardFails.length > 0) return null;
 
+        // ----- base components -----
         const ctxSlack = Math.max(0, ctx - derivedMinCtx);
         const ctxScore = ctxUnknown
           ? 0.2
@@ -165,10 +238,7 @@ router.post("/", async (req, res) => {
 
         let tagHits = 0;
         for (const it of intent) if (hasTag(domainTags, it)) tagHits++;
-
-        const tagBoost =
-          intent.length === 0 ? 0 : Math.min(1, tagHits / Math.max(2, Math.ceil(intent.length * 0.5)));
-
+        const tagBoost = intent.length === 0 ? 0 : Math.min(1, tagHits / Math.max(2, Math.ceil(intent.length * 0.5)));
         let domainScore = Math.max(baseTextFit, 0.55 * tagBoost + 0.45 * baseTextFit);
 
         if (profile.finance) {
@@ -185,23 +255,34 @@ router.post("/", async (req, res) => {
         if (domainTags.includes("legacy")) stabilityPenalty += 0.1;
         if (domainTags.includes("deprecated")) stabilityPenalty += 0.18;
 
-        const arenaRaw = m.benchmarkResults?.[0]?.scoreRaw ?? null;
-        const arenaNormalized = m.benchmarkResults?.[0]?.scoreNormalized ?? null;
+        // ----- benchmarks (pick latest per key) -----
+        const byKey = new Map<string, { raw: number; norm: number }>();
+        for (const br of m.benchmarkResults ?? []) {
+          const key = (br as any)?.benchmark?.key;
+          if (!key) continue;
+          if (!byKey.has(key)) byKey.set(key, { raw: br.scoreRaw, norm: br.scoreNormalized });
+        }
 
-        const arenaScore01 =
-          arenaNormalized == null
-            ? 0.5
-            : arenaNormalized <= 1.001
-              ? clamp01(arenaNormalized)
-              : clamp01(arenaNormalized / 100);
+        const arenaRaw = byKey.get("arena_elo")?.raw ?? null;
+        const arena01 = normBench01(byKey.get("arena_elo")?.norm ?? null);
 
-        const arenaWeight = profile.highStakes ? 0.25 : profile.finance ? 0.2 : 0.15;
-        const baseWeightScale = 1 - arenaWeight;
+        const agg = aggregateBenchmarks01({
+          profile,
+          arena01,
+          mmlu01: normBench01(byKey.get("mmlu")?.norm ?? null),
+          gsm8k01: normBench01(byKey.get("gsm8k")?.norm ?? null),
+          humaneval01: normBench01(byKey.get("humaneval")?.norm ?? null),
+          hellaswag01: normBench01(byKey.get("hellaswag")?.norm ?? null),
+          arc01: normBench01(byKey.get("arc_challenge")?.norm ?? null),
+          truthful01: normBench01(byKey.get("truthfulqa")?.norm ?? null),
+        });
+
+        const baseWeightScale = 1 - w.bench;
 
         let score =
           baseWeightScale *
             (w.ctx * ctxScore + w.lat * latencyScore + w.cost * costScore + w.domain * domainScore + w.cap * capScore) +
-          arenaWeight * arenaScore01;
+          w.bench * agg.bench01;
 
         score = clamp01(score - unknownPenalty - confPenalty - stabilityPenalty);
 
@@ -213,7 +294,8 @@ router.post("/", async (req, res) => {
         if (stabilityPenalty > 0) warnings.push("Model stability is lower (preview/legacy/deprecated)");
 
         const why: string[] = [
-          `Arena benchmark: ${arenaNormalized != null ? scoreToPercent(arenaScore01) + "%" : "Not available"}`,
+          `Benchmarks aggregate: ${scoreToPercent(agg.bench01)}%`,
+          ...agg.detail,
           `Context fit: ${scoreToPercent(ctxScore)}%`,
           `Latency fit: ${scoreToPercent(latencyScore)}%`,
           `Cost value: ${scoreToPercent(costScore)}%`,
@@ -222,7 +304,7 @@ router.post("/", async (req, res) => {
         ];
 
         why.unshift(
-          `Task normalized: ${profile._meta?.normalizedTask ?? String(task)}`,
+          `Task normalized: ${profile._meta?.normalizedTask ?? task}`,
           ...(profile._meta?.detectedTypos?.length ? [`Typos fixed: ${profile._meta.detectedTypos.join(", ")}`] : [])
         );
 
@@ -291,15 +373,14 @@ router.post("/", async (req, res) => {
         ok: true,
         eventId: null,
         results: payloadResults,
-        message:
-          "No models satisfied the hard requirements. Try lowering context requirement, increasing latency target, or changing privacy.",
+        message: "No models satisfied hard requirements. Lower context, increase latency target, or change privacy.",
       });
     }
 
     const event = await prisma.recommendationEvent.create({
       data: {
-        task: String(task),
-        privacy: String(privacy),
+        task,
+        privacy,
         latency: Number(latency) || 0,
         context: Number(context) || 0,
         results: payloadResults as any,
@@ -307,7 +388,7 @@ router.post("/", async (req, res) => {
       },
     });
 
-    res.json({ ok: true, eventId: event.id, results: payloadResults });
+    res.json({ ok: true, eventId: event.id, results: payloadResults, models: results.map((r: any) => r.model) });
   } catch (err) {
     console.error("/recommend error", err);
     res.status(500).json({ ok: false, error: "Internal server error" });

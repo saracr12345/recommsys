@@ -1,3 +1,4 @@
+//worker/src/services/benchmarks/sources/lymsysArena
 import type { Benchmark, PrismaClient } from '@prisma/client'
 
 type ArenaRow = {

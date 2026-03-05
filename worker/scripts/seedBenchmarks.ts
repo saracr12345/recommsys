@@ -1,3 +1,4 @@
+//worker/scripts/seedBechmarks.ts
 /// <reference types="node" />
 
 import { PrismaClient } from '@prisma/client'

@@ -1,3 +1,4 @@
+//worker/scripts/listArenaModels.ts
 import { fetchAllArenaRows } from '../src/services/benchmarks/sources/lmsysArena'
 
 async function main() {

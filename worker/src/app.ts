@@ -14,6 +14,9 @@ import { authMiddleware, requireAuth } from './middleware/auth.js';
 import { redis } from './redis.js';
 import { makeGetFeeds } from './services/feeds/getFeeds.js';
 
+// ✅ use your shared prisma singleton
+import { prisma } from './prisma.js';
+
 export function createApp() {
   const app = express();
   const parser = new Parser();
@@ -34,17 +37,68 @@ export function createApp() {
   // --- ROUTES ---
   app.use('/auth', authRouter);
 
-  // existing models CRUD routes (protected)
-  app.use('/models', requireAuth, modelsRouter);
+  // ✅ Preferred API mounts (consistent)
+  app.use('/api/models', requireAuth, modelsRouter);
+  app.use('/api/recommend', requireAuth, recommendRouter);
+  app.use('/api/recommendations', requireAuth, recommendationsRouter);
+  app.use('/api/chat', requireAuth, chatRouter);
 
+  // ✅ Backwards-compatible aliases (so existing frontend links don’t break)
+  app.use('/models', requireAuth, modelsRouter);
   app.use('/recommend', requireAuth, recommendRouter);
   app.use('/recommendations', requireAuth, recommendationsRouter);
   app.use('/chat', requireAuth, chatRouter);
 
   // --- EXTRA API ENDPOINTS ---
-  // If you want these unprotected, keep as-is.
-  // If you want them protected too, wrap with requireAuth.
+  // ✅ public model detail (public)
   app.get('/api/models/:id', getModelById);
+
+  // ✅ public model list + arena elo (public)
+  app.get('/api/models', async (_req, res) => {
+    try {
+      const models = await prisma.modelProfile.findMany({
+        include: {
+          benchmarkResults: {
+            where: {
+              benchmark: { key: 'arena_elo' },
+              source: 'lmsys-arena',
+              runId: 'latest',
+            },
+            orderBy: { recordedAt: 'desc' },
+            take: 1,
+          },
+        },
+        orderBy: { updatedAt: 'desc' },
+      });
+
+      const out = models.map((m) => {
+        const arenaRaw = m.benchmarkResults?.[0]?.scoreRaw ?? null;
+        const arenaNorm = m.benchmarkResults?.[0]?.scoreNormalized ?? null; // 0..100
+        return {
+          id: m.id,
+          name: m.name,
+          provider: m.provider ?? null,
+          family: m.family ?? null,
+          modality: m.modality ?? null,
+          apiType: m.apiType ?? null,
+          license: m.license ?? null,
+          contextWindow: m.contextWindow ?? null,
+          latencyMs: m.latencyMs ?? null,
+          costPer1kTokens: m.costPer1kTokens ?? null,
+          domainTags: m.domainTags ?? [],
+          source: m.source ?? null,
+          url: m.url ?? null,
+          arenaElo: arenaRaw,
+          arenaScore: arenaNorm, // 0..100
+        };
+      });
+
+      res.json({ ok: true, models: out });
+    } catch (e) {
+      console.error('GET /api/models error', e);
+      res.status(500).json({ ok: false, error: 'Failed to load models' });
+    }
+  });
 
   // --- HEALTH ---
   app.get('/health', (_req, res) => res.json({ ok: true }));

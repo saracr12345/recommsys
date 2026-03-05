@@ -16,10 +16,10 @@ type NavItem = {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Explore', to: '/', end: true },
+  { label: 'Explore', to: '/explore', end: true },
   { label: 'Recommend', to: '/advisor' },
-  { label: 'Community', to: '/feed' },
-  { label: 'Chat', to: '/aichat' },
+  { label: 'Community', to: '/community' },
+  { label: 'Chat', to: '/chat' }, // ✅ FIXED
 ]
 
 function DesktopNav() {
@@ -59,7 +59,6 @@ export default function TopNav({ sidebarCollapsed }: TopNavProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Close menus when route changes
   useEffect(() => {
     setMenuOpen(false)
     setMobileMenuOpen(false)
@@ -89,13 +88,10 @@ export default function TopNav({ sidebarCollapsed }: TopNavProps) {
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* LEFT SPACER (logo removed) */}
           <div className="w-10">{sidebarCollapsed ? null : null}</div>
 
-          {/* Desktop Navigation */}
           <DesktopNav />
 
-          {/* Right Section */}
           <div className="flex items-center gap-4">
             {user ? (
               <div className="relative">
@@ -114,7 +110,6 @@ export default function TopNav({ sidebarCollapsed }: TopNavProps) {
                   />
                 </button>
 
-                {/* Dropdown Menu */}
                 {menuOpen && (
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl border border-slate-200 shadow-xl overflow-hidden z-50">
                     <div className="px-4 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-emerald-50">
@@ -176,7 +171,6 @@ export default function TopNav({ sidebarCollapsed }: TopNavProps) {
               </div>
             )}
 
-            {/* Mobile Menu Button */}
             <button
               type="button"
               onClick={() => setMobileMenuOpen((v) => !v)}
@@ -188,7 +182,6 @@ export default function TopNav({ sidebarCollapsed }: TopNavProps) {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-slate-200 bg-gradient-to-b from-white to-slate-50 py-4 space-y-2">
             {navItems.map((item) => (
